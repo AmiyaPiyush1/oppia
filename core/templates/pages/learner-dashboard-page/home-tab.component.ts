@@ -17,7 +17,13 @@
  */
 
 import {AppConstants} from 'app.constants';
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ChangeDetectorRef,
+} from '@angular/core';
 import {CollectionSummary} from 'domain/collection/collection-summary.model';
 import {LearnerTopicSummary} from 'domain/topic/learner-topic-summary.model';
 import {LearnerExplorationSummary} from 'domain/summary/learner-exploration-summary.model';
@@ -81,7 +87,8 @@ export class HomeTabComponent {
     private windowDimensionService: WindowDimensionsService,
     private urlInterpolationService: UrlInterpolationService,
     private siteAnalyticsService: SiteAnalyticsService,
-    private platformFeatureService: PlatformFeatureService
+    private platformFeatureService: PlatformFeatureService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {}
 
   isSerialChapterFeatureLearnerFlagEnabled(): boolean {
@@ -148,6 +155,7 @@ export class HomeTabComponent {
         (acc, topic) => acc + topic.getCanonicalStorySummaryDicts().length,
         0
       );
+
     if (
       this.hasMultipleUnfinishedPublished &&
       this.storySummariesWithAvailableNodes.size > 0
@@ -169,22 +177,30 @@ export class HomeTabComponent {
       this.loadingMessage = '';
       this.loaderService.hideLoadingScreen();
     } else {
+      // If after 5 seconds not all cards reported back, force show the UI
+      // to avoid an infinite loading screen on edge cases.
       setTimeout(() => {
         if (!this.allCardsLoaded) {
           this.allCardsLoaded = true;
           this.loadingMessage = '';
           this.loaderService.hideLoadingScreen();
+          this.changeDetectorRef.detectChanges();
         }
-      }, 10000);
+      }, 5000);
     }
   }
 
   onLessonLoaded(): void {
     this.loadedLessonCards++;
     if (this.loadedLessonCards >= this.totalLessonCards) {
-      this.allCardsLoaded = true;
-      this.loadingMessage = '';
-      this.loaderService.hideLoadingScreen();
+      // Small timeout ensures the browser has finished rendering the cards
+      // before we swap the skeleton out.
+      setTimeout(() => {
+        this.allCardsLoaded = true;
+        this.loadingMessage = '';
+        this.loaderService.hideLoadingScreen();
+        this.changeDetectorRef.detectChanges();
+      }, 100);
     }
   }
 

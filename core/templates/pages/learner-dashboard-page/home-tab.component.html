@@ -24,7 +24,7 @@
         [ngStyle]="windowIsNarrow && {'width': width + 'px'}">
           <div *ngFor="let topicSummaryTile of continueWhereYouLeftOffList" class="topic-summary">
             <div *ngFor="let storySummaryTile of topicSummaryTile.canonicalStorySummaryDicts; let i = index"
-                 class="story-summary-tile">
+                  class="story-summary-tile">
               <oppia-learner-story-summary-tile [storySummary]="storySummaryTile" [displayArea]="'homeTab'"
                 [topicName]="topicSummaryTile.name" (click)="registerClassroomInProgressLessonEvent(topicSummaryTile.classroomName, topicSummaryTile.name)">
               </oppia-learner-story-summary-tile>
@@ -49,7 +49,7 @@
                 </oppia-learner-topic-summary-tile>
               </div>
               <a [href]="getClassroomLink(item.key)" target="{{ openInNewWindow ? '_blank' : '_self' }}"
-                 class="oppia-classroom-link">
+                  class="oppia-classroom-link">
                 <div class="classroom-card">
                   <p class="classroom-text">
                     <span [innerHTML]="'I18N_VIEW_ALL_TOPICS' | translate: {classroomName: item.key}"></span>
@@ -66,9 +66,9 @@
       <p class="suggested-for-you-heading" [innerHTML]="'I18N_LEARNER_DASHBOARD_LEARN_SOMETHING_NEW_SECTION' | translate"></p>
       <p [innerHTML]="'I18N_LEARNER_DASHBOARD_EMPTY_LEARN_SOMETHING_NEW_SECTION' | translate" class="mt-4"></p>
       <a class="btn oppia-dashboard-intro-button oppia-transition-200 oppia-learner-dashboard-intro-button-link"
-         [innerHTML]="'I18N_ACTION_BROWSE_LESSONS' | translate"
-         href="/community-library"
-         [oppiaFocusOn]="'ourLessonsBtn'"[routerLink]="communityLibraryUrl"
+          [innerHTML]="'I18N_ACTION_BROWSE_LESSONS' | translate"
+          href="/community-library"
+          [oppiaFocusOn]="'ourLessonsBtn'"[routerLink]="communityLibraryUrl"
         >
       </a>
     </div>
@@ -84,11 +84,11 @@
   </ng-container>
 
   <div *ngIf="redesignFeatureFlag">
-    <!--TODO(#18384): Hides recommendations if no classroom topics in-progress (isNonemptyObject(untrackedTopics) not sure what this does)-->
     <div *ngIf="!allCardsLoaded" >
+      <!--TODO(#18384): Hides recommendations if no classroom topics in-progress (isNonemptyObject(untrackedTopics) not sure what this does)-->
       <oppia-loading-message class="oppia-message-loader" [message]="loadingMessage"></oppia-loading-message>
     </div>
-    <div  [class.loading-content]="!allCardsLoaded">
+    <div [hidden]="!allCardsLoaded" [class.loading-content]="!allCardsLoaded">
       <div class="oppia-learner-dash-section e2e-test-learner-dash-section" *ngIf="getTotalInProgressLessons() > 0 ">
         <p class="oppia-learner-dash-section-heading e2e-test-learner-dash-section-heading">
           {{ 'I18N_LEARNER_DASHBOARD_CONTINUE_WHERE_YOU_LEFT_OFF_SECTION' | translate }}
@@ -129,7 +129,10 @@
         <ng-container *ngFor="let item of untrackedTopics | keyvalue">
           <oppia-card-display [headingI18n]="'I18N_LEARNER_DASHBOARD_HOME_CLASSROOM_SECTION'" [numCards]="item.value.length" [cardWidth]="226">
             <ng-container *ngFor="let topicSummaryTile of item.value">
-              <oppia-learner-topic-summary-tile class="e2e-test-learer-topic-summary-tile" [topicSummary]="topicSummaryTile" [redesignFeatureFlag]="redesignFeatureFlag">
+              <oppia-learner-topic-summary-tile class="e2e-test-learer-topic-summary-tile" 
+                                                [topicSummary]="topicSummaryTile" 
+                                                [redesignFeatureFlag]="redesignFeatureFlag"
+                                                (lessonLoaded)="onLessonLoaded()">
               </oppia-learner-topic-summary-tile>
             </ng-container>
           </oppia-card-display>
