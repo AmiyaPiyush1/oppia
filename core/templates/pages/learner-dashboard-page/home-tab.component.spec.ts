@@ -71,8 +71,6 @@ describe('Home tab Component', () => {
           useValue: {
             isWindowNarrow: () => true,
             getResizeEvent: () => mockResizeEmitter,
-            isWindowNarrow: () => true,
-            getResizeEvent: () => mockResizeEmitter,
           },
         },
         {provide: PlatformFeatureService, useValue: mockPlatformFeatureService},
@@ -93,6 +91,17 @@ describe('Home tab Component', () => {
     spyOn(i18nLanguageCodeService, 'isCurrentLanguageRTL').and.returnValue(
       true
     );
+
+    component.untrackedTopics = {};
+    component.continueWhereYouLeftOffList = [];
+    component.partiallyLearntTopicsList = [];
+    component.incompleteExplorationsList = [];
+    component.incompleteCollectionsList = [];
+    component.totalLessonsInPlaylists = [];
+    component.currentGoals = [];
+    component.goalTopics = [];
+    component.username = 'test_user';
+
     let subtopic = {
       skill_ids: ['skill_id_2'],
       id: 1,

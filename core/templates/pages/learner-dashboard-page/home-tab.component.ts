@@ -216,7 +216,7 @@ export class HomeTabComponent {
   }
 
   isNonemptyObject(object: Object): boolean {
-    return Object.keys(object).length !== 0;
+    return object && Object.keys(object).length > 0;
   }
 
   getClassroomLink(classroomUrlFragment: string): string {
