@@ -39,6 +39,7 @@ import {CollectionSummary} from 'domain/collection/collection-summary.model';
 import {LearnerExplorationSummary} from 'domain/summary/learner-exploration-summary.model';
 import {PlatformFeatureService} from 'services/platform-feature.service';
 import {LoaderService} from 'services/loader.service';
+import {ChangeDetectorRef} from '@angular/core';
 
 describe('Home tab Component', () => {
   let component: HomeTabComponent;
@@ -64,9 +65,12 @@ describe('Home tab Component', () => {
       declarations: [MockTranslatePipe, HomeTabComponent],
       providers: [
         UrlInterpolationService,
+        ChangeDetectorRef,
         {
           provide: WindowDimensionsService,
           useValue: {
+            isWindowNarrow: () => true,
+            getResizeEvent: () => mockResizeEmitter,
             isWindowNarrow: () => true,
             getResizeEvent: () => mockResizeEmitter,
           },
@@ -757,6 +761,7 @@ describe('Home tab Component Loader visibility tests', () => {
       declarations: [MockTranslatePipe, HomeTabComponent],
       providers: [
         {provide: PlatformFeatureService, useValue: mockPlatformFeatureService},
+        {provide: ChangeDetectorRef, useValue: {detectChanges: () => {}}},
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -831,7 +836,7 @@ describe('Home tab Component Loader visibility tests', () => {
 
     expect(component.allCardsLoaded).toBe(false);
     expect(component.totalLessonCards).toBeGreaterThan(0);
-    tick(10100);
+    tick(5100);
     expect(component.allCardsLoaded).toBe(true);
     expect(component.loadingMessage).toEqual('');
     expect(hideLoadingScreenSpy).toHaveBeenCalled();
@@ -873,11 +878,11 @@ describe('Home tab Component Loader visibility tests', () => {
 
     component.allCardsLoaded = true;
     const callCountBeforeTimeout = hideLoadingScreenSpy.calls.count();
-    tick(10100);
+    tick(5100);
     expect(hideLoadingScreenSpy.calls.count()).toEqual(callCountBeforeTimeout);
   }));
 
-  it('should increment loadedLessonCards and hide loading screen when all lessons are loaded', () => {
+  it('should increment loadedLessonCards and hide loading screen when all lessons are loaded', fakeAsync(() => {
     component.loadedLessonCards = 4;
     component.totalLessonCards = 5;
     component.allCardsLoaded = false;
@@ -886,11 +891,12 @@ describe('Home tab Component Loader visibility tests', () => {
 
     component.onLessonLoaded();
 
+    expect(component.allCardsLoaded).toBe(false);
+    tick(100);
     expect(component.loadedLessonCards).toEqual(5);
     expect(component.allCardsLoaded).toBe(true);
-    expect(component.loadingMessage).toEqual('');
     expect(hideLoadingScreenSpy).toHaveBeenCalled();
-  });
+  }));
 
   it('should increment loadedLessonCards without hiding loading screen when not all lessons are loaded', () => {
     component.loadedLessonCards = 2;

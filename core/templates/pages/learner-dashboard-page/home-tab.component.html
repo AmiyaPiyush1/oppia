@@ -129,8 +129,8 @@
         <ng-container *ngFor="let item of untrackedTopics | keyvalue">
           <oppia-card-display [headingI18n]="'I18N_LEARNER_DASHBOARD_HOME_CLASSROOM_SECTION'" [numCards]="item.value.length" [cardWidth]="226">
             <ng-container *ngFor="let topicSummaryTile of item.value">
-              <oppia-learner-topic-summary-tile class="e2e-test-learer-topic-summary-tile" 
-                                                [topicSummary]="topicSummaryTile" 
+              <oppia-learner-topic-summary-tile class="e2e-test-learer-topic-summary-tile"
+                                                [topicSummary]="topicSummaryTile"
                                                 [redesignFeatureFlag]="redesignFeatureFlag"
                                                 (lessonLoaded)="onLessonLoaded()">
               </oppia-learner-topic-summary-tile>
