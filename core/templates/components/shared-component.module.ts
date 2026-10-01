@@ -94,7 +94,6 @@ import {DisplaySolutionModalComponent} from 'pages/exploration-player-page/curre
 import {DisplaySolutionInterstititalModalComponent} from 'pages/exploration-player-page/current-lesson-player/modals/display-solution-interstitial-modal.component';
 import {DisplayHintModalComponent} from 'pages/exploration-player-page/current-lesson-player/modals/display-hint-modal.component';
 import {HintAndSolutionButtonsComponent} from './button-directives/hint-and-solution-buttons.component';
-import {SearchBarModule} from 'pages/library-page/search-bar/search-bar.module';
 import {SubtopicSummaryTileComponent} from './summary-tile/subtopic-summary-tile.component';
 import {FilteredChoicesFieldComponent} from './filter-fields/filtered-choices-field/filtered-choices-field.component';
 import {MultiSelectionFieldComponent} from './filter-fields/multi-selection-field/multi-selection-field.component';
@@ -213,6 +212,7 @@ import {NewInputResponsePairComponent} from 'pages/exploration-player-page/new-l
 import {NewConversationSkinComponent} from 'pages/exploration-player-page/new-lesson-player/conversation-skin-components/new-conversation-skin.component';
 import {ConversationDisplayComponent} from 'pages/exploration-player-page/new-lesson-player/conversation-skin-components/conversation-display-components/conversation-display.component';
 import {CardNavigationControlComponent} from 'pages/exploration-player-page/new-lesson-player/conversation-skin-components/card-navigation-control.component';
+import {CardInteractionControlsComponent} from 'pages/exploration-player-page/new-lesson-player/conversation-skin-components/card-interaction-controls.component';
 import {RouterModule} from '@angular/router';
 import {HintSolutionAndConceptCardDisplayComponent} from 'pages/exploration-player-page/new-lesson-player/conversation-skin-components/conversation-display-components/hint-solution-and-concept-card-display.component';
 import {DisplayNewHintModalComponent} from 'pages/exploration-player-page/new-lesson-player/conversation-skin-components/conversation-display-components/display-new-hint-modal.component';
@@ -250,7 +250,6 @@ import {NewRatingsAndRecommendationsComponent} from 'pages/exploration-player-pa
     OppiaCkEditor4Module,
     OppiaCkEditorCopyToolBarModule,
     RichTextComponentsModule,
-    SearchBarModule,
     SharedFormsModule,
     RecommendationsModule,
     StringUtilityPipesModule,
@@ -287,6 +286,7 @@ import {NewRatingsAndRecommendationsComponent} from 'pages/exploration-player-pa
     ConversationSkinComponent,
     ConversationDisplayComponent,
     CardNavigationControlComponent,
+    CardInteractionControlsComponent,
     ProgressBarComponent,
     NewConversationSkinComponent,
     ProgressTrackerComponent,
@@ -460,6 +460,7 @@ import {NewRatingsAndRecommendationsComponent} from 'pages/exploration-player-pa
     ConversationSkinComponent,
     ConversationDisplayComponent,
     CardNavigationControlComponent,
+    CardInteractionControlsComponent,
     ProgressTrackerComponent,
     CheckpointBarComponent,
     NewConversationSkinComponent,
@@ -635,7 +636,6 @@ import {NewRatingsAndRecommendationsComponent} from 'pages/exploration-player-pa
     ObjectComponentsModule,
     OppiaCkEditor4Module,
     OppiaCkEditorCopyToolBarModule,
-    SearchBarModule,
     SharedFormsModule,
     StringUtilityPipesModule,
     // Components, directives, and pipes.
@@ -657,6 +657,7 @@ import {NewRatingsAndRecommendationsComponent} from 'pages/exploration-player-pa
     HintSolutionAndConceptCardDisplayComponent,
     ConversationDisplayComponent,
     CardNavigationControlComponent,
+    CardInteractionControlsComponent,
     NewConversationSkinComponent,
     EndChapterCheckMarkComponent,
     NewEndChapterCheckMarkComponent,

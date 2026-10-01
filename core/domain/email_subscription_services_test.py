@@ -33,7 +33,7 @@ MYPY = False
 if MYPY:  # pragma: no cover
     from mypy_imports import email_models, user_models
 
-(email_models, user_models) = models.Registry.import_models(
+email_models, user_models = models.Registry.import_models(
     [models.Names.EMAIL, models.Names.USER]
 )
 
@@ -71,7 +71,6 @@ class InformSubscribersTest(test_utils.EmailTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (platform_parameter_list.ParamName.EMAIL_FOOTER, 'EMAIL_FOOTER'),
             (platform_parameter_list.ParamName.EMAIL_SENDER_NAME, 'admin'),
             (

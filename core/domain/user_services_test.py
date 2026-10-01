@@ -56,7 +56,7 @@ if MYPY:  # pragma: no cover
     )
 
 datastore_services = models.Registry.import_datastore_services()
-(auth_models, user_models, audit_models, suggestion_models) = (
+auth_models, user_models, audit_models, suggestion_models = (
     models.Registry.import_models(
         [
             models.Names.AUTH,
@@ -795,7 +795,6 @@ class UserServicesUnitTests(test_utils.GenericTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.SYSTEM_EMAIL_ADDRESS,
                 'system@example.com',
@@ -913,7 +912,6 @@ class UserServicesUnitTests(test_utils.GenericTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.SYSTEM_EMAIL_ADDRESS,
                 'system@example.com',
@@ -1188,7 +1186,6 @@ class UserServicesUnitTests(test_utils.GenericTestBase):
                 'EDIT_ANY_SUBTOPIC_PAGE',
                 'VISIT_ANY_QUESTION_EDITOR_PAGE',
                 'ACCESS_LEARNER_DASHBOARD',
-                'ACCESS_FEEDBACK_UPDATES',
                 'EDIT_ANY_ACTIVITY',
                 'VISIT_ANY_TOPIC_EDITOR_PAGE',
                 'SUGGEST_CHANGES',
@@ -2670,8 +2667,7 @@ class UserCheckpointProgressUpdateTests(test_utils.GenericTestBase):
 
     EXP_ID: Final = 'exp_id0'
 
-    SAMPLE_EXPLORATION_YAML: Final = (
-        """
+    SAMPLE_EXPLORATION_YAML: Final = """
 author_notes: ''
 auto_tts_enabled: true
 blurb: ''
@@ -2832,7 +2828,6 @@ states_schema_version: 42
 tags: []
 title: Title
 """
-    )
 
     def setUp(self) -> None:
         super().setUp()
@@ -5045,10 +5040,6 @@ class UserContributionReviewRightsTests(test_utils.GenericTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (
-                platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS,
-                True,
-            ),
             (
                 platform_parameter_list.ParamName.SYSTEM_EMAIL_ADDRESS,
                 'system@example.com',

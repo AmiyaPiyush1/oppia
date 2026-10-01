@@ -27,6 +27,7 @@ from core.constants import constants
 from core.controllers import acl_decorators, base
 from core.domain import (
     email_manager,
+    feature_flag_services,
     platform_parameter_list,
     platform_parameter_services,
     role_services,
@@ -513,7 +514,16 @@ class SignupPage(
             self.redirect(return_url)
             return
 
-        self.render_template('oppia-root.mainpage.html')
+        self.render_template(
+            'oppia-root.mainpage.html',
+            values={
+                'OPPIA_FEATURE_FLAGS': (
+                    feature_flag_services.evaluate_all_feature_flag_configs(
+                        self.user_id
+                    )
+                ),
+            },
+        )
 
 
 class SignupHandlerNormalizedPayloadDict(TypedDict):
@@ -567,14 +577,8 @@ class SignupHandler(
         """Handles GET requests."""
         assert self.user_id is not None
         user_settings = user_services.get_user_settings(self.user_id)
-        server_can_send_emails = (
-            platform_parameter_services.get_platform_parameter_value(
-                platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS.value
-            )
-        )
         self.render_json(
             {
-                'server_can_send_emails': server_can_send_emails,
                 'has_agreed_to_latest_terms': bool(
                     user_settings.last_agreed_to_terms
                     and user_settings.last_agreed_to_terms
@@ -649,12 +653,7 @@ class SignupHandler(
 
         # Note that an email is only sent when the user registers for the first
         # time.
-        server_can_send_emails = (
-            platform_parameter_services.get_platform_parameter_value(
-                platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS.value
-            )
-        )
-        if server_can_send_emails and not has_ever_registered:
+        if not has_ever_registered:
             email_manager.send_post_signup_email(self.user_id)
 
         user_settings = user_services.get_user_settings(self.user_id)

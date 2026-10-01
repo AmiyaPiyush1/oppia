@@ -28,14 +28,12 @@ from scripts import build, common, servers
 
 from typing import Final, List, Optional, Tuple, cast
 
-_PARSER: Final = argparse.ArgumentParser(
-    description="""
+_PARSER: Final = argparse.ArgumentParser(description="""
 Run this script from the oppia root folder:
    python -m scripts.run_acceptance_tests
 
 The root folder MUST be named 'oppia'.
-"""
-)
+""")
 
 _PARSER.add_argument(
     '--skip_build',
@@ -172,12 +170,10 @@ def get_suite_framework(suite_name: str) -> str:
 def run_tests(args: argparse.Namespace) -> Tuple[List[bytes], int]:
     """Run the scripts to start acceptance tests."""
     if common.is_oppia_server_already_running():
-        sys.exit(
-            """
+        sys.exit("""
             Oppia server is already running. Try shutting all the servers down
             before running the script.
-        """
-        )
+        """)
 
     suite_framework = get_suite_framework(args.suite)
 
@@ -199,7 +195,6 @@ def run_tests(args: argparse.Namespace) -> Tuple[List[bytes], int]:
         stack.callback(common.set_constants_to_default)
 
         stack.enter_context(servers.managed_redis_server())
-        stack.enter_context(servers.managed_elasticsearch_dev_server())
         stack.enter_context(servers.managed_firebase_auth_emulator())
         stack.enter_context(
             servers.managed_cloud_datastore_emulator(clear_datastore=True)

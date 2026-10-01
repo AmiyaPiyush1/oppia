@@ -37,13 +37,11 @@ from . import (
     servers,
 )
 
-_PARSER = argparse.ArgumentParser(
-    description="""
+_PARSER = argparse.ArgumentParser(description="""
 Run the script from the oppia root folder:
     python -m scripts.start
 Note that the root folder MUST be named 'oppia'.
-"""
-)
+""")
 _PARSER.add_argument(
     '--save_datastore',
     help='optional; if specified, does not clear the datastore.',
@@ -166,7 +164,6 @@ def start_services(
 ) -> psutil.Process:
     """Starts all the required services and returns the dev appserver."""
     stack.enter_context(servers.managed_redis_server())
-    stack.enter_context(servers.managed_elasticsearch_dev_server())
     stack.enter_context(
         servers.managed_firebase_auth_emulator(
             recover_users=parsed_args.save_datastore
@@ -281,7 +278,6 @@ def main(args: Optional[Sequence[str]] = None) -> None:
         (feconf.GAE_DEVELOPMENT_SERVER_PORT, 'GAE dev appserver'),
         (feconf.GAE_ADMIN_SERVER_PORT, 'GAE dev appserver admin port'),
         (feconf.REDISPORT, 'Redis server'),
-        (feconf.ES_LOCALHOST_PORT, 'ElasticSearch server'),
         (feconf.FIREBASE_EMULATOR_PORT, 'Firebase auth emulator'),
         (feconf.CLOUD_DATASTORE_EMULATOR_PORT, 'Cloud Datastore emulator'),
     ]

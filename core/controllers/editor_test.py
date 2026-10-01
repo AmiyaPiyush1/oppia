@@ -58,7 +58,7 @@ if MYPY:  # pragma: no cover
         user_models,
     )
 
-(exp_models, stats_models, translation_models, user_models) = (
+exp_models, stats_models, translation_models, user_models = (
     models.Registry.import_models(
         [
             models.Names.EXPLORATION,
@@ -578,8 +578,7 @@ param_changes: []
 solicit_answer_details: false
 """
         ),
-        feconf.DEFAULT_INIT_STATE_NAME: (
-            """card_is_checkpoint: true
+        feconf.DEFAULT_INIT_STATE_NAME: ("""card_is_checkpoint: true
 classifier_model_id: null
 content:
   content_id: content_0
@@ -613,9 +612,7 @@ interaction:
 linked_skill_id: null
 param_changes: []
 solicit_answer_details: false
-"""
-        )
-        % feconf.DEFAULT_INIT_STATE_NAME,
+""") % feconf.DEFAULT_INIT_STATE_NAME,
     }
 
     SAMPLE_STATE_STRING = """card_is_checkpoint: false
@@ -2943,7 +2940,6 @@ class ModeratorEmailsTests(test_utils.EmailTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, False),
             (
                 platform_parameter_list.ParamName.ADMIN_EMAIL_ADDRESS,
                 'testadmin@example.com',
@@ -2954,7 +2950,7 @@ class ModeratorEmailsTests(test_utils.EmailTestBase):
             ),
         ]
     )
-    def test_error_cases_when_can_send_emails_param_is_false(self) -> None:
+    def test_error_cases_when_unpublishing_exploration(self) -> None:
         # Log in as a moderator.
         self.login(self.MODERATOR_EMAIL)
 
@@ -2996,7 +2992,6 @@ class ModeratorEmailsTests(test_utils.EmailTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (platform_parameter_list.ParamName.EMAIL_FOOTER, 'footer'),
             (
                 platform_parameter_list.ParamName.EMAIL_SENDER_NAME,
@@ -3012,7 +3007,7 @@ class ModeratorEmailsTests(test_utils.EmailTestBase):
             ),
         ]
     )
-    def test_error_cases_when_can_send_emails_param_is_true(self) -> None:
+    def test_success_case_when_unpublishing_exploration(self) -> None:
         # Log in as a moderator.
         self.login(self.MODERATOR_EMAIL)
 
@@ -3038,7 +3033,6 @@ class ModeratorEmailsTests(test_utils.EmailTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.EMAIL_FOOTER,
                 'You can change your email preferences via the '
@@ -3130,7 +3124,6 @@ class ModeratorEmailsTests(test_utils.EmailTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.EMAIL_FOOTER,
                 'You can change your email preferences via the '

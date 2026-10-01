@@ -155,34 +155,28 @@ def send_mail(
         )
     )
 
-    server_can_send_emails = (
-        platform_parameter_services.get_platform_parameter_value(
-            platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS.value
-        )
+    response = email_services.send_email_to_recipients(
+        sender_email,
+        [recipient_email],
+        subject,
+        plaintext_body,
+        html_body,
+        cc_emails,
+        bcc,
+        '',
+        None,
+        attachments,
     )
-    if server_can_send_emails:
-        response = email_services.send_email_to_recipients(
-            sender_email,
-            [recipient_email],
-            subject,
-            plaintext_body,
-            html_body,
-            cc_emails,
-            bcc,
-            '',
-            None,
-            attachments,
-        )
 
-        if not response:
-            raise Exception(
-                (
-                    'Email to %s failed to send. Please try again later or '
-                    'contact us to report a bug at '
-                    'https://www.oppia.org/contact.'
-                )
-                % recipient_email
+    if not response:
+        raise Exception(
+            (
+                'Email to %s failed to send. Please try again later or '
+                'contact us to report a bug at '
+                'https://www.oppia.org/contact.'
             )
+            % recipient_email
+        )
 
 
 def convert_email_to_loggable_string(
@@ -302,9 +296,7 @@ def convert_email_to_loggable_string(
     )
     attachments_msg_description = """
         Attachments: %s
-        """ % (
-        ', '.join(filenames) if len(filenames) > 0 else 'None'
-    )
+        """ % (', '.join(filenames) if len(filenames) > 0 else 'None')
     loggable_msg = (
         textwrap.dedent(msg)
         + textwrap.dedent(optional_msg_description)
