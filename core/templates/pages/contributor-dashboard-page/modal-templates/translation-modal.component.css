@@ -238,8 +238,8 @@
 
 .oppia-auto-translate-button-container {
   position: absolute;
-  right: 0;
-  top: 15px;
+  right: 6px;
+  top: 18px;
   z-index: 100;
 }
 
@@ -261,6 +261,10 @@
 
 .oppia-translate-icon {
   font-size: 18px;
+  margin-right: 5px;
+}
+
+.oppia-auto-translate-spinner {
   margin-right: 5px;
 }
 
@@ -309,4 +313,8 @@
   color: #666;
   font-size: 20px;
   margin-right: 10px;
+}
+
+.oppia-editor-container {
+  position: relative;
 }

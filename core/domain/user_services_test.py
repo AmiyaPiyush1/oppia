@@ -34,6 +34,7 @@ from core.domain import (
     exp_services,
     platform_parameter_list,
     rights_manager,
+    role_services,
     state_domain,
     suggestion_services,
     user_domain,
@@ -55,7 +56,7 @@ if MYPY:  # pragma: no cover
     )
 
 datastore_services = models.Registry.import_datastore_services()
-(auth_models, user_models, audit_models, suggestion_models) = (
+auth_models, user_models, audit_models, suggestion_models = (
     models.Registry.import_models(
         [
             models.Names.AUTH,
@@ -794,7 +795,6 @@ class UserServicesUnitTests(test_utils.GenericTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.SYSTEM_EMAIL_ADDRESS,
                 'system@example.com',
@@ -912,7 +912,6 @@ class UserServicesUnitTests(test_utils.GenericTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.SYSTEM_EMAIL_ADDRESS,
                 'system@example.com',
@@ -1187,7 +1186,6 @@ class UserServicesUnitTests(test_utils.GenericTestBase):
                 'EDIT_ANY_SUBTOPIC_PAGE',
                 'VISIT_ANY_QUESTION_EDITOR_PAGE',
                 'ACCESS_LEARNER_DASHBOARD',
-                'ACCESS_FEEDBACK_UPDATES',
                 'EDIT_ANY_ACTIVITY',
                 'VISIT_ANY_TOPIC_EDITOR_PAGE',
                 'SUGGEST_CHANGES',
@@ -2484,6 +2482,44 @@ class UserServicesUnitTests(test_utils.GenericTestBase):
         user_services.add_user_role(user_id, feconf.ROLE_ID_TOPIC_MANAGER)
         self.assertTrue(user_services.is_topic_manager(user_id))
 
+    def test_get_user_roles_and_actions(self) -> None:
+        auth_id = 'someUser'
+        user_email = 'user@example.com'
+
+        user_id = user_services.create_new_user(auth_id, user_email).user_id
+
+        roles, actions, user_settings = (
+            user_services.get_user_roles_and_actions(user_id)
+        )
+        expected_actions = role_services.get_all_actions(
+            [feconf.ROLE_ID_FULL_USER]
+        )
+        self.assertEqual(roles, [feconf.ROLE_ID_FULL_USER])
+        self.assertEqual(actions, expected_actions)
+        assert user_settings is not None
+        self.assertEqual(user_settings.user_id, user_id)
+
+        user_services.add_user_role(user_id, feconf.ROLE_ID_CURRICULUM_ADMIN)
+        roles, actions, _ = user_services.get_user_roles_and_actions(user_id)
+        expected_roles = [
+            feconf.ROLE_ID_FULL_USER,
+            feconf.ROLE_ID_CURRICULUM_ADMIN,
+        ]
+        expected_actions = role_services.get_all_actions(expected_roles)
+        self.assertEqual(roles, expected_roles)
+        self.assertEqual(actions, expected_actions)
+
+    def test_get_user_roles_and_actions_for_non_existent_user(self) -> None:
+        roles, actions, user_settings = (
+            user_services.get_user_roles_and_actions('nonExistentUser')
+        )
+        self.assertEqual(roles, [feconf.ROLE_ID_GUEST])
+        self.assertEqual(
+            actions,
+            role_services.get_all_actions([feconf.ROLE_ID_GUEST]),
+        )
+        self.assertIsNone(user_settings)
+
     def test_create_login_url(self) -> None:
         return_url = 'sample_url'
         expected_url = '/login?return_url=sample_url'
@@ -2631,8 +2667,7 @@ class UserCheckpointProgressUpdateTests(test_utils.GenericTestBase):
 
     EXP_ID: Final = 'exp_id0'
 
-    SAMPLE_EXPLORATION_YAML: Final = (
-        """
+    SAMPLE_EXPLORATION_YAML: Final = """
 author_notes: ''
 auto_tts_enabled: true
 blurb: ''
@@ -2793,7 +2828,6 @@ states_schema_version: 42
 tags: []
 title: Title
 """
-    )
 
     def setUp(self) -> None:
         super().setUp()
@@ -5006,10 +5040,6 @@ class UserContributionReviewRightsTests(test_utils.GenericTestBase):
 
     @test_utils.set_platform_parameters(
         [
-            (
-                platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS,
-                True,
-            ),
             (
                 platform_parameter_list.ParamName.SYSTEM_EMAIL_ADDRESS,
                 'system@example.com',

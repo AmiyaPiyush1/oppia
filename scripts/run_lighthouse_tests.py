@@ -47,13 +47,11 @@ LIGHTHOUSE_SHARDS_JSON_FILEPATH = os.path.join(
 
 ENTITY_MATCHER: Final = r'\{\{(.*?)\}\}'
 
-_PARSER: Final = argparse.ArgumentParser(
-    description="""
+_PARSER: Final = argparse.ArgumentParser(description="""
 Run the script from the oppia root folder:
     python -m scripts.run_lighthouse_tests --shard <shard_number>
 Note that the root folder MUST be named 'oppia'.
-"""
-)
+""")
 
 _PARSER.add_argument(
     '--pages', help='Sets the pages to run the lighthouse tests on'
@@ -591,7 +589,6 @@ def main(args: Optional[List[str]] = None) -> None:
 
     with contextlib.ExitStack() as stack:
         stack.enter_context(servers.managed_redis_server())
-        stack.enter_context(servers.managed_elasticsearch_dev_server())
 
         if constants.EMULATOR_MODE:
             stack.enter_context(servers.managed_firebase_auth_emulator())

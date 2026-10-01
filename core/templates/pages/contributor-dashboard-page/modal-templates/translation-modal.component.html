@@ -73,15 +73,14 @@
         <ck-editor-copy-toolbar *ngIf="activeDataFormat === 'html'"></ck-editor-copy-toolbar>
         <div class="oppia-editor-container"
              [class.oppia-container-expanded]="isTranslationExpanded" [class.oppia-container-contracted]="!isTranslationExpanded"
-             #translationContainer
-             style="position: relative;">
+             #translationContainer>
           <p class="oppia-keybaord-accessibility-text" tabindex="0">Alt+0 for keyboard accessibility</p>
           <div *ngIf="isAutomaticTranslationSuggestionsEnabled() && activeDataFormat === 'html'" class="oppia-auto-translate-button-container">
             <button class="btn btn-default oppia-auto-translate-button e2e-test-auto-translate-button"
                     (click)="generateTranslation()"
                     [disabled]="isGeneratingTranslation">
               <i class="material-icons oppia-translate-icon" *ngIf="!isGeneratingTranslation">translate</i>
-              <i class="fa fa-spinner fa-spin" *ngIf="isGeneratingTranslation"></i>
+              <i class="fa fa-spinner fa-spin oppia-auto-translate-spinner" *ngIf="isGeneratingTranslation"></i>
               <span class="oppia-auto-translate-text">Auto-translate</span>
             </button>
           </div>
@@ -121,9 +120,7 @@
       </div>
     </div>
     <div class="oppia-translation-error-section">
-      <p *ngIf="hasImageInAutoTranslation && !hasAltTextModalBeenOpened">
-        Please verify that no alt text is required or that the translated alt text is accurate.
-      </p>
+
       <div *ngIf="isFormulaAsText(activeWrittenTranslation)" class="alert alert-warning e2e-test-formula-as-text-warning d-flex justify-content-between"
            [ngClass]="mathWarningIsMinimized ? 'align-items-center' : 'align-items-start'">
         <div *ngIf="!mathWarningIsMinimized">

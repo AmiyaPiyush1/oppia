@@ -5521,8 +5521,7 @@ class YamlCreationUnitTests(test_utils.GenericTestBase):
     """Test creation of explorations from YAML files."""
 
     SAMPLE_YAML_CONTENT: str = (
-        (
-            """author_notes: ''
+        ("""author_notes: ''
 auto_tts_enabled: false
 blurb: ''
 category: Category
@@ -5593,8 +5592,7 @@ states_schema_version: %d
 tags: []
 title: Title
 version: 0
-"""
-        )
+""")
         % (
             feconf.DEFAULT_INIT_STATE_NAME,
             exp_domain.Exploration.CURRENT_EXP_SCHEMA_VERSION,
@@ -19369,7 +19367,6 @@ class ExplorationChangesMergeabilityUnitTests(
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.ADMIN_EMAIL_ADDRESS,
                 'testadmin@example.com',
@@ -19776,7 +19773,6 @@ class ExplorationChangesMergeabilityUnitTests(
 
     @test_utils.set_platform_parameters(
         [
-            (platform_parameter_list.ParamName.SERVER_CAN_SEND_EMAILS, True),
             (
                 platform_parameter_list.ParamName.ADMIN_EMAIL_ADDRESS,
                 'testadmin@example.com',
