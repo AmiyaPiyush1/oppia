@@ -31,6 +31,7 @@ export interface EmailPreferencesBackendDict {
   can_receive_editor_role_email: boolean;
   can_receive_feedback_message_email: boolean;
   can_receive_subscription_email: boolean;
+  can_receive_contributor_dashboard_email: boolean;
 }
 
 interface NonEmailPreferencesBackendDict {
@@ -40,6 +41,7 @@ interface NonEmailPreferencesBackendDict {
   default_dashboard: string;
   user_bio: string;
   subject_interests: string;
+  profile_name_for_certificate: string;
   subscription_list: SubscriptionSummary[];
 }
 
@@ -66,6 +68,7 @@ export type BackendPreferenceUpdateType =
   | 'profile_picture_data_url'
   | 'user_bio'
   | 'subject_interests'
+  | 'profile_name_for_certificate'
   | 'default_dashboard'
   | 'preferred_language_codes'
   | 'preferred_site_language_code'
@@ -86,6 +89,7 @@ export interface UpdatePreferenceDict {
 
 export interface UserContributionRightsDataBackendDict {
   can_review_translation_for_language_codes: string[];
+  can_submit_translation_for_language_codes: string[];
   can_review_voiceover_for_language_codes: string[];
   can_review_questions: boolean;
   can_suggest_questions: boolean;

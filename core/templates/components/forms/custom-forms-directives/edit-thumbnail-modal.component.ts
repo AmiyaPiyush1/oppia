@@ -35,6 +35,7 @@ interface Dimensions {
 @Component({
   selector: 'edit-thumbnail-modal',
   templateUrl: './edit-thumbnail-modal.component.html',
+  styleUrls: ['./edit-thumbnail-modal.component.css'],
   animations: [
     trigger('fade', [
       transition('void => *', [
@@ -77,6 +78,13 @@ export class EditThumbnailModalComponent {
     private svgSanitizerService: SvgSanitizerService,
     private ngbActiveModal: NgbActiveModal
   ) {}
+
+  // Public wrapper for the SVG sanitizer service's getIssueURL method.
+  // This is needed because Angular strict template checking does not
+  // allow direct access to private class members from templates.
+  getIssueURL(invalidTagsAndAttrs: InvalidTagsAndAttributes): string {
+    return this.svgSanitizerService.getIssueURL(invalidTagsAndAttrs);
+  }
 
   setImageDimensions(height: number, width: number): void {
     this.dimensions = {

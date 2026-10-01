@@ -35,6 +35,7 @@ import {ValidatorsService} from 'services/validators.service';
 @Component({
   selector: 'oppia-create-new-skill-modal',
   templateUrl: './create-new-skill-modal.component.html',
+  styleUrls: ['./create-new-skill-modal.component.css'],
 })
 export class CreateNewSkillModalComponent {
   rubrics = [
@@ -91,14 +92,6 @@ export class CreateNewSkillModalComponent {
   }
 
   getHtmlSchema(): {type: string} {
-    if (!this.isEnableWorkedexamplesRteComponentFeatureEnabled()) {
-      this.HTML_SCHEMA = {
-        type: 'html',
-        ui_config: {
-          rte_component_config_id: 'ALL_COMPONENTS',
-        },
-      };
-    }
     return this.HTML_SCHEMA;
   }
 
@@ -151,11 +144,6 @@ export class CreateNewSkillModalComponent {
       this.rubrics[1].setExplanations([this.newSkillDescription]);
       this.skillCreationService.markChangeInSkillDescription();
     }
-  }
-
-  isEnableWorkedexamplesRteComponentFeatureEnabled(): boolean {
-    return this.platformFeatureService.status.EnableWorkedExamplesRteComponent
-      .isEnabled;
   }
 
   resetErrorMsg(): void {

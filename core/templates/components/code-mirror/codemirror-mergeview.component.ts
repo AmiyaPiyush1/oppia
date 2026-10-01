@@ -28,6 +28,11 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import {WindowRef} from 'services/contextual/window-ref.service';
+import {
+  LazyCssLoaderService,
+  KNOWN_CSS,
+} from 'services/lazy-css-loader.service';
+import * as dmpModule from 'diff_match_patch/lib/diff_match_patch';
 
 @Component({
   selector: 'oppia-codemirror-mergeview',
@@ -48,10 +53,12 @@ export class CodemirrorMergeviewComponent
   constructor(
     private elementRef: ElementRef,
     private ngZone: NgZone,
-    private windowRef: WindowRef
+    private windowRef: WindowRef,
+    private lazyCssLoaderService: LazyCssLoaderService
   ) {}
 
   ngOnInit(): void {
+    this.lazyCssLoaderService.loadCss(KNOWN_CSS.CODEMIRROR);
     // Require CodeMirror.
     if (
       (this.windowRef.nativeWindow as typeof window).CodeMirror === undefined
@@ -61,6 +68,19 @@ export class CodemirrorMergeviewComponent
   }
 
   ngAfterViewInit(): void {
+    const nativeWindow = this.windowRef.nativeWindow as Window & {
+      diff_match_patch?: typeof dmpModule.diff_match_patch;
+      patch_obj?: typeof dmpModule.patch_obj;
+      DIFF_INSERT?: typeof dmpModule.DIFF_INSERT;
+      DIFF_DELETE?: typeof dmpModule.DIFF_DELETE;
+      DIFF_EQUAL?: typeof dmpModule.DIFF_EQUAL;
+    };
+    nativeWindow.diff_match_patch = dmpModule.diff_match_patch;
+    nativeWindow.patch_obj = dmpModule.patch_obj;
+    nativeWindow.DIFF_INSERT = dmpModule.DIFF_INSERT;
+    nativeWindow.DIFF_DELETE = dmpModule.DIFF_DELETE;
+    nativeWindow.DIFF_EQUAL = dmpModule.DIFF_EQUAL;
+
     // 'value', 'orig' are initial values of left and right
     // pane respectively.
     this.ngZone.runOutsideAngular(() => {

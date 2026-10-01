@@ -34,18 +34,19 @@ import {RouterService} from '../services/router.service';
 @Component({
   selector: 'oppia-improvements-tab',
   templateUrl: './improvements-tab.component.html',
+  styleUrls: ['./improvements-tab.component.css'],
 })
 export class ImprovementsTabComponent implements OnInit {
-  stateRetentions: Map<string, number>;
-  stateVisibility: Map<string, boolean>;
-  timeMachineImageUrl: string;
-  completionRate: number;
-  completionRateAsPercent: string;
-  hbrTasks: HighBounceRateTask[];
-  iflTasks: IneffectiveFeedbackLoopTask[];
-  ngrTasks: NeedsGuidingResponsesTask[];
-  siaTasks: SuccessiveIncorrectAnswersTask[];
-  allStateTasks: StateTasks[];
+  stateRetentions!: Map<string, number>;
+  stateVisibility!: Map<string, boolean>;
+  timeMachineImageUrl!: string;
+  completionRate!: number;
+  completionRateAsPercent!: string;
+  hbrTasks!: HighBounceRateTask[];
+  iflTasks!: IneffectiveFeedbackLoopTask[];
+  ngrTasks!: NeedsGuidingResponsesTask[];
+  siaTasks!: SuccessiveIncorrectAnswersTask[];
+  allStateTasks!: StateTasks[];
 
   constructor(
     private explorationImprovementsTaskRegistryService: ExplorationImprovementsTaskRegistryService,
@@ -101,7 +102,7 @@ export class ImprovementsTabComponent implements OnInit {
   }
 
   isStateTasksVisible(stateName: string): boolean {
-    return this.stateVisibility.get(stateName);
+    return this.stateVisibility.get(stateName) ?? false;
   }
 
   toggleStateTasks(stateName: string): Map<string, boolean> {

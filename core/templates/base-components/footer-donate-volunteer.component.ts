@@ -30,14 +30,15 @@ import {NavbarAndFooterGATrackingPages} from 'app.constants';
 @Component({
   selector: 'oppia-footer-donate-volunteer',
   templateUrl: './footer-donate-volunteer.component.html',
+  styleUrls: ['./footer-donate-volunteer.component.css'],
   encapsulation: ViewEncapsulation.None,
 })
 export class FooterDonateVolunteerComponent implements AfterViewInit {
   constructor(
     private windowRef: WindowRef,
     private siteAnalyticsService: SiteAnalyticsService,
-    private renderer: Renderer2,
-    private el: ElementRef
+    public renderer: Renderer2,
+    public el: ElementRef
   ) {}
 
   ngAfterViewInit(): void {

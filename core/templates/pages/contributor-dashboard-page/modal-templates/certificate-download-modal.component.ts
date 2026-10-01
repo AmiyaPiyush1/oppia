@@ -34,6 +34,7 @@ interface CertificateContentData {
 @Component({
   selector: 'certificate-download-modal',
   templateUrl: './certificate-download-modal.component.html',
+  styleUrls: ['./certificate-download-modal.component.css'],
 })
 export class CertificateDownloadModalComponent {
   @Input() suggestionType!: string;
@@ -44,7 +45,9 @@ export class CertificateDownloadModalComponent {
   toDate!: string;
   errorMessage!: string;
   errorsFound = false;
-  certificateDownloading = false;
+  isDownloading = false;
+  isPrinting = false;
+  isCancelled = false;
   datesSelected = false;
 
   CERTIFICATE_WIDTH: number = 1500;
@@ -71,6 +74,7 @@ export class CertificateDownloadModalComponent {
   ) {}
 
   close(): void {
+    this.isCancelled = true;
     this.activeModal.close();
   }
 
@@ -85,7 +89,7 @@ export class CertificateDownloadModalComponent {
     today.setHours(0, 0, 0, 0);
     const toDate = new Date(this.toDate);
     toDate.setHours(0, 0, 0, 0);
-    if (!this.fromDate || !this.toDate || new Date(this.fromDate) >= toDate) {
+    if (!this.fromDate || !this.toDate || new Date(this.fromDate) > toDate) {
       this.errorsFound = true;
       this.errorMessage = 'Invalid date range.';
       return;
@@ -99,11 +103,21 @@ export class CertificateDownloadModalComponent {
     this.errorsFound = false;
     this.errorMessage = '';
   }
+  get isDownloadDisabled(): boolean {
+    return (
+      this.isDownloading ||
+      this.isPrinting ||
+      this.disableDownloadButton() ||
+      this.errorsFound
+    );
+  }
 
-  downloadCertificate(): void {
+  printCertificate(): void {
     this.errorsFound = false;
     this.errorMessage = '';
-    this.certificateDownloading = true;
+    this.isPrinting = true;
+    this.isCancelled = false;
+
     this.contributionAndReviewService
       .downloadContributorCertificateAsync(
         this.username,
@@ -113,6 +127,44 @@ export class CertificateDownloadModalComponent {
         this.toDate
       )
       .then((response: ContributorCertificateResponse) => {
+        if (this.isCancelled) {
+          return;
+        }
+        if (response.certificate_data) {
+          this.createCertificate(response.certificate_data, true);
+        } else {
+          this.errorsFound = true;
+          this.errorMessage =
+            'There are no contributions for the given date range.';
+        }
+        this.isPrinting = false;
+      })
+      .catch((err: HttpErrorResponse) => {
+        if (this.isCancelled) {
+          return;
+        }
+        this.errorsFound = true;
+        this.isPrinting = false;
+        this.errorMessage = err.error.error;
+      });
+  }
+  downloadCertificate(): void {
+    this.errorsFound = false;
+    this.errorMessage = '';
+    this.isDownloading = true;
+    this.isCancelled = false;
+    this.contributionAndReviewService
+      .downloadContributorCertificateAsync(
+        this.username,
+        this.suggestionType,
+        this.languageCode,
+        this.fromDate,
+        this.toDate
+      )
+      .then((response: ContributorCertificateResponse) => {
+        if (this.isCancelled) {
+          return;
+        }
         if (response.certificate_data) {
           this.createCertificate(response.certificate_data);
         } else {
@@ -120,11 +172,14 @@ export class CertificateDownloadModalComponent {
           this.errorMessage =
             'There are no contributions for the given date range.';
         }
-        this.certificateDownloading = false;
+        this.isDownloading = false;
       })
       .catch((err: HttpErrorResponse) => {
+        if (this.isCancelled) {
+          return;
+        }
         this.errorsFound = true;
-        this.certificateDownloading = false;
+        this.isDownloading = false;
         this.errorMessage = err.error.error;
       });
   }
@@ -133,7 +188,10 @@ export class CertificateDownloadModalComponent {
     return this.fromDate === undefined || this.toDate === undefined;
   }
 
-  createCertificate(info: ContributorCertificateInfo): void {
+  createCertificate(
+    info: ContributorCertificateInfo,
+    isPrinting: boolean = false
+  ): void {
     const canvas = document.createElement('canvas');
     const currentDate = new Date();
     // Intl.DateTimeFormatOptions is used to enable language sensitive date
@@ -202,42 +260,59 @@ export class CertificateDownloadModalComponent {
       ctx.font = '40px Capriola';
       ctx.fillStyle = '#00645C';
       linePosition += 100;
-      ctx.fillText(this.username, this.CERTIFICATE_MID_POINT, linePosition);
+      ctx.fillText(
+        info.certificate_profile_name,
+        this.CERTIFICATE_MID_POINT,
+        linePosition
+      );
 
       ctx.font = '28px Capriola';
       ctx.fillStyle = '#8F9899';
       linePosition += 100;
 
       if (this.suggestionType === 'translate_content') {
+        // Determine time display: use minutes if less than 1 hour,
+        // otherwise use hours.
+        let timeDisplay: string;
+        if (info.contribution_hours < 1) {
+          const minutes = Math.round(info.contribution_hours * 60);
+          timeDisplay = minutes === 1 ? '1 minute' : minutes + ' minutes';
+        } else {
+          timeDisplay = info.contribution_hours + ' hours';
+        }
+
         const certificateContentData: CertificateContentData[] = [
           {
             text:
               "for their dedication and time in translating Oppia's " +
-              'basic maths lessons to ' +
-              info.language,
+              'basic maths, science,',
             linePosition: linePosition,
           },
           {
             text:
-              'which will help our ' +
+              'and financial literacy lessons to ' +
               info.language +
-              '-speaking ' +
-              'learners better understand the lessons.',
+              ' which will help our ' +
+              info.language +
+              '-speaking',
+            linePosition: (linePosition += 40),
+          },
+          {
+            text: 'learners better understand the lessons.',
             linePosition: (linePosition += 40),
           },
           {
             text:
-              'This certificate confirms that ' +
-              this.username +
-              ' has contributed ' +
-              info.contribution_hours +
-              ' hours ' +
-              'worth of',
+              'This certificate confirms the completion of ' +
+              info.contribution_word_count +
+              ' words of translated content,',
             linePosition: (linePosition += 80),
           },
           {
             text:
-              'translations from ' +
+              'representing ' +
+              timeDisplay +
+              ' of service from ' +
               info.from_date +
               ' to ' +
               info.to_date +
@@ -266,7 +341,7 @@ export class CertificateDownloadModalComponent {
           {
             text:
               'This certificate confirms that ' +
-              this.username +
+              info.certificate_profile_name +
               ' has contributed ' +
               info.contribution_hours +
               ' hours',
@@ -284,11 +359,32 @@ export class CertificateDownloadModalComponent {
       ctx.font = '24px Brush Script MT';
       ctx.fillStyle = '#000000';
       linePosition += 100;
-      ctx.fillText(
-        info.team_lead,
-        this.SIGNATURE_BASE_COORDINATE,
-        linePosition
-      );
+
+      // For translation certificates, shift the cursive name UP by 25
+      // pixels to make room for the title between the name and divider line.
+      // For question certificates, draw the name at the standard position.
+      const signatureY =
+        this.suggestionType === 'translate_content'
+          ? linePosition - 25
+          : linePosition;
+      ctx.fillText(info.team_lead, this.SIGNATURE_BASE_COORDINATE, signatureY);
+
+      // Only show the coordinator title on translation certificates.
+      if (this.suggestionType === 'translate_content') {
+        // Save the canvas state so the smaller grey font doesn't leak
+        // into the Date text and divider lines that follow.
+        ctx.save();
+
+        ctx.font = '16px Roboto';
+        ctx.fillStyle = '#8F9899';
+        ctx.fillText(
+          'Translations Coordinator',
+          this.SIGNATURE_BASE_COORDINATE,
+          linePosition - 5
+        );
+
+        ctx.restore();
+      }
 
       ctx.font = '24px Roboto';
       ctx.fillText(
@@ -310,11 +406,31 @@ export class CertificateDownloadModalComponent {
       ctx.fillText('SIGNATURE', this.SIGNATURE_BASE_COORDINATE, linePosition);
       ctx.fillText('DATE', this.DATE_BASE_COORDINATE, linePosition);
 
-      // Create an HTML link and clicks on it to download.
-      const link = document.createElement('a');
-      link.download = 'certificate.png';
-      link.href = canvas.toDataURL();
-      link.click();
+      if (isPrinting) {
+        canvas.toBlob(blob => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+              iframe.contentWindow?.print();
+              setTimeout(() => {
+                document.body.removeChild(iframe);
+                URL.revokeObjectURL(url);
+              }, 1000);
+            };
+          }
+        });
+      } else {
+        // Create an HTML link and clicks on it to download.
+        const link = document.createElement('a');
+        link.download = 'certificate.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      }
     };
   }
 

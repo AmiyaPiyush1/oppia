@@ -32,6 +32,7 @@ import {UserExplorationPermissionsService} from '../services/user-exploration-pe
 @Component({
   selector: 'exploration-save-and-publish-buttons',
   templateUrl: './exploration-save-and-publish-buttons.component.html',
+  styleUrls: ['./exploration-save-and-publish-buttons.component.css'],
 })
 export class ExplorationSaveAndPublishButtonsComponent
   implements OnInit, OnDestroy
@@ -39,12 +40,12 @@ export class ExplorationSaveAndPublishButtonsComponent
   directiveSubscriptions = new Subscription();
 
   isModalDisplayed: boolean = false;
-  autosaveIsInProgress: boolean;
-  saveIsInProcess: boolean;
-  publishIsInProcess: boolean;
-  loadingDotsAreShown: boolean;
-  explorationCanBePublished: boolean;
-  connectedToInternet: boolean;
+  autosaveIsInProgress = false;
+  saveIsInProcess = false;
+  publishIsInProcess = false;
+  loadingDotsAreShown = false;
+  explorationCanBePublished = false;
+  connectedToInternet = true;
 
   constructor(
     private explorationRightsService: ExplorationRightsService,

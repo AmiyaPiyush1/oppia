@@ -32,6 +32,7 @@ import {EditabilityService} from 'services/editability.service';
 @Component({
   selector: 'oppia-state-name-editor',
   templateUrl: './state-name-editor.component.html',
+  styleUrls: ['./state-name-editor.component.css'],
 })
 export class StateNameEditorComponent implements OnInit, OnDestroy {
   directiveSubscriptions = new Subscription();
@@ -52,6 +53,14 @@ export class StateNameEditorComponent implements OnInit, OnDestroy {
     private stateEditorService: StateEditorService,
     private stateNameService: StateNameService
   ) {}
+
+  get activeStateName(): string | null {
+    return this.stateEditorService.getActiveStateName();
+  }
+
+  isStateNameEditorShown(): boolean {
+    return this.stateNameService.isStateNameEditorShown();
+  }
 
   openStateNameEditor(): void {
     let stateName = this.stateEditorService.getActiveStateName();

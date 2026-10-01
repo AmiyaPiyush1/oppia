@@ -17,20 +17,20 @@
  */
 
 import {HttpClientTestingModule} from '@angular/common/http/testing';
-import {
-  async,
-  ComponentFixture,
-  TestBed,
-  waitForAsync,
-} from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {By} from '@angular/platform-browser';
 import {MaterialModule} from 'modules/material.module';
 
 import {
   AdminBackendApiService,
   AdminPageData,
 } from 'domain/admin/admin-backend-api.service';
+import {SkillSummary} from 'domain/skill/skill-summary.model';
+import {StoryContents} from 'domain/story/story-contents-object.model';
+import {Story} from 'domain/story/story.model';
+import {CreatorTopicSummary} from 'domain/topic/creator-topic-summary.model';
 import {WindowRef} from 'services/contextual/window-ref.service';
 import {AdminDataService} from '../services/admin-data.service';
 import {AdminTaskManagerService} from '../services/admin-task-manager.service';
@@ -43,34 +43,69 @@ describe('Admin dev mode activities tab', () => {
   let adminDataService: AdminDataService;
   let adminTaskManagerService: AdminTaskManagerService;
   let windowRef: WindowRef;
-  let adminDataObject = {
+  let topicSummary = new CreatorTopicSummary(
+    'topic_id',
+    'Topic Name',
+    1,
+    1,
+    1,
+    1,
+    0,
+    'en',
+    'description',
+    1,
+    0,
+    0,
+    0,
+    true,
+    true,
+    false,
+    null,
+    'thumbnail.svg',
+    '#C6DCDA',
+    'topic-name',
+    0,
+    0,
+    [1],
+    [1]
+  );
+  let skillSummary = new SkillSummary('skill_id', 'Skill 1', 'en', 1, 0, 0, 0);
+  let story = new Story(
+    'story_id',
+    'story_title',
+    'description',
+    '',
+    new StoryContents('node_1', [], 'node_2'),
+    'en',
+    1,
+    'topic_id',
+    '#C6DCDA',
+    'thumbnail.svg',
+    'story-title',
+    'meta'
+  );
+  let adminDataObject: AdminPageData = {
     demoExplorationIds: ['expId'],
     demoExplorations: [['0', 'welcome.yaml']],
     demoCollections: [['collectionId']],
-    skillList: [
+    updatableRoles: [],
+    roleToActions: {},
+    viewableRoles: [],
+    humanReadableRoles: {},
+    topicSummaries: [topicSummary],
+    platformParameters: [],
+    skillList: [skillSummary],
+    storyList: [story],
+    classroomList: [
       {
-        id: 'Fg6LbD9h2Eg4',
-        description: 'Skill1',
+        classroomId: 'classroomId1',
+        name: 'math',
       },
     ],
-    topicSummaries: [
-      {
-        id: 'topid_id',
-        name: 'topic_name',
-        description: 'description',
-      },
-    ],
-    storyList: [
-      {
-        id: 'story_id',
-        title: 'story_title',
-        description: 'description',
-      },
-    ],
-  } as AdminPageData;
+  };
   let mockConfirmResult: (val: boolean) => void;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [
         BrowserAnimationsModule,
@@ -82,7 +117,7 @@ describe('Admin dev mode activities tab', () => {
     }).compileComponents();
   }));
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     fixture = TestBed.createComponent(AdminDevModeActivitiesTabComponent);
     component = fixture.componentInstance;
     adminBackendApiService = TestBed.inject(AdminBackendApiService);
@@ -139,7 +174,7 @@ describe('Admin dev mode activities tab', () => {
       expect(adminBackendSpy).not.toHaveBeenCalled();
     });
 
-    it('should load explorations', async(() => {
+    it('should load explorations', waitForAsync(() => {
       const expId = component.demoExplorationIds[0];
 
       spyOn(adminBackendApiService, 'reloadExplorationAsync').and.returnValue(
@@ -162,7 +197,7 @@ describe('Admin dev mode activities tab', () => {
       });
     }));
 
-    it('should not load explorations with wrong exploration ID', async(() => {
+    it('should not load explorations with wrong exploration ID', waitForAsync(() => {
       const expId = 'wrong-exp-id';
 
       spyOn(adminBackendApiService, 'reloadExplorationAsync').and.returnValue(
@@ -271,7 +306,7 @@ describe('Admin dev mode activities tab', () => {
       expect(adminBackendSpy).not.toHaveBeenCalled();
     });
 
-    it('should reload all explorations', async(() => {
+    it('should reload all explorations', waitForAsync(() => {
       const demoExplorationIds = ['expId'];
       component.demoExplorationIds = demoExplorationIds;
       component.reloadingAllExplorationPossible = true;
@@ -296,7 +331,7 @@ describe('Admin dev mode activities tab', () => {
       });
     }));
 
-    it('should not reload all exploration if exploration ID is wrong', async(() => {
+    it('should not reload all exploration if exploration ID is wrong', waitForAsync(() => {
       const demoExplorationIds = ['wrongId'];
       component.demoExplorationIds = demoExplorationIds;
       component.reloadingAllExplorationPossible = true;
@@ -346,7 +381,7 @@ describe('Admin dev mode activities tab', () => {
       }
     );
 
-    it('should generate dummy explorations', async(() => {
+    it('should generate dummy explorations', waitForAsync(() => {
       component.numDummyExpsToPublish = 1;
       component.numDummyExpsToGenerate = 2;
 
@@ -371,7 +406,7 @@ describe('Admin dev mode activities tab', () => {
 
     it(
       'should show error message when dummy explorations' + 'are not generated',
-      async(() => {
+      waitForAsync(() => {
         component.numDummyExpsToPublish = 2;
         component.numDummyExpsToGenerate = 2;
 
@@ -441,7 +476,7 @@ describe('Admin dev mode activities tab', () => {
   });
 
   describe('.generateDummyBlogPost', () => {
-    it('should generate dummy blog post', async(() => {
+    it('should generate dummy blog post', waitForAsync(() => {
       spyOn(
         adminBackendApiService,
         'generateDummyBlogPostAsync'
@@ -463,7 +498,7 @@ describe('Admin dev mode activities tab', () => {
 
     it(
       'should show error message if new dummy blog post ' + 'title is empty',
-      async(() => {
+      waitForAsync(() => {
         spyOn(component.setStatusMessage, 'emit');
 
         component.generateNewBlogPost('');
@@ -476,7 +511,7 @@ describe('Admin dev mode activities tab', () => {
 
     it(
       'should show error message if new dummy blog post ' + 'is not generated',
-      async(() => {
+      waitForAsync(() => {
         spyOn(
           adminBackendApiService,
           'generateDummyBlogPostAsync'
@@ -499,7 +534,7 @@ describe('Admin dev mode activities tab', () => {
   });
 
   describe('.loadNewStructuresData', () => {
-    it('should generate structures data', async(() => {
+    it('should generate structures data', waitForAsync(() => {
       spyOn(
         adminBackendApiService,
         'generateDummyNewStructuresDataAsync'
@@ -520,7 +555,7 @@ describe('Admin dev mode activities tab', () => {
 
     it(
       'should show error message if new structues data' + 'is not generated',
-      async(() => {
+      waitForAsync(() => {
         spyOn(
           adminBackendApiService,
           'generateDummyNewStructuresDataAsync'
@@ -542,7 +577,7 @@ describe('Admin dev mode activities tab', () => {
   });
 
   describe('.generateNewSkillData', () => {
-    it('should generate structures data', async(() => {
+    it('should generate structures data', waitForAsync(() => {
       spyOn(
         adminBackendApiService,
         'generateDummyNewSkillDataAsync'
@@ -563,7 +598,7 @@ describe('Admin dev mode activities tab', () => {
 
     it(
       'should show error message if new structues data' + 'is not generated',
-      async(() => {
+      waitForAsync(() => {
         spyOn(
           adminBackendApiService,
           'generateDummyNewSkillDataAsync'
@@ -585,15 +620,19 @@ describe('Admin dev mode activities tab', () => {
   });
 
   describe('.generateNewClassroom', () => {
-    it('should generate classroom data', async(() => {
+    it('should generate classroom data', waitForAsync(() => {
       spyOn(
         adminBackendApiService,
         'generateDummyClassroomDataAsync'
       ).and.returnValue(Promise.resolve());
       spyOn(component.setStatusMessage, 'emit');
+      component.numDummyClassroomsToGenerate = 3;
 
       component.generateNewClassroom();
 
+      expect(
+        adminBackendApiService.generateDummyClassroomDataAsync
+      ).toHaveBeenCalledWith(3);
       expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
         'Processing...'
       );
@@ -608,7 +647,7 @@ describe('Admin dev mode activities tab', () => {
       });
     }));
 
-    it('should show error message if new classroom data is not generated', async(() => {
+    it('should show error message if new classroom data is not generated', waitForAsync(() => {
       spyOn(
         adminBackendApiService,
         'generateDummyClassroomDataAsync'
@@ -626,6 +665,123 @@ describe('Admin dev mode activities tab', () => {
       fixture.whenStable().then(() => {
         expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
           'Server error: New classroom data not generated.'
+        );
+      });
+    }));
+    it('should disable the generate button when count is non-positive', () => {
+      const generateButton = fixture.debugElement.query(
+        By.css('.load-dummy-math-classroom')
+      ).nativeElement as HTMLButtonElement;
+
+      component.numDummyClassroomsToGenerate = 0;
+      fixture.detectChanges();
+      expect(generateButton.disabled).toBeTrue();
+
+      component.numDummyClassroomsToGenerate = -1;
+      fixture.detectChanges();
+      expect(generateButton.disabled).toBeTrue();
+    });
+  });
+
+  describe('.generateNewDefaultClassrooms', () => {
+    it('should generate default classroom data', waitForAsync(() => {
+      spyOn(
+        adminBackendApiService,
+        'generateDummyDefaultClassroomsAsync'
+      ).and.returnValue(Promise.resolve());
+      spyOn(component.setStatusMessage, 'emit');
+      component.numDummyDefaultClassroomsToGenerate = 3;
+
+      component.generateNewDefaultClassrooms();
+
+      expect(
+        adminBackendApiService.generateDummyDefaultClassroomsAsync
+      ).toHaveBeenCalledWith(3);
+      expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+        'Processing...'
+      );
+
+      fixture.whenStable().then(() => {
+        expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+          'Dummy default classrooms generated successfully.'
+        );
+      });
+    }));
+
+    it('should show error message if default classroom data is not generated', waitForAsync(() => {
+      spyOn(
+        adminBackendApiService,
+        'generateDummyDefaultClassroomsAsync'
+      ).and.returnValue(
+        Promise.reject('Default classroom data not generated.')
+      );
+      spyOn(component.setStatusMessage, 'emit');
+      component.generateNewDefaultClassrooms();
+
+      expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+        'Processing...'
+      );
+
+      fixture.whenStable().then(() => {
+        expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+          'Server error: Default classroom data not generated.'
+        );
+      });
+    }));
+    it('should disable the generate button when count is non-positive', () => {
+      const generateButton = fixture.debugElement.query(
+        By.css('.load-dummy-default-classroom')
+      ).nativeElement as HTMLButtonElement;
+
+      component.numDummyDefaultClassroomsToGenerate = 0;
+      fixture.detectChanges();
+      expect(generateButton.disabled).toBeTrue();
+
+      component.numDummyDefaultClassroomsToGenerate = -1;
+      fixture.detectChanges();
+      expect(generateButton.disabled).toBeTrue();
+    });
+  });
+
+  describe('.generateNewTopics', () => {
+    it('should generate topic data', waitForAsync(() => {
+      spyOn(adminBackendApiService, 'generateDummyTopicsAsync').and.returnValue(
+        Promise.resolve()
+      );
+      spyOn(component.setStatusMessage, 'emit');
+      component.numDummyTopicsToGenerate = 3;
+      component.selectedClassroomId = 'classroom1';
+
+      component.generateNewTopics();
+
+      expect(
+        adminBackendApiService.generateDummyTopicsAsync
+      ).toHaveBeenCalledWith(3, 'classroom1');
+      expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+        'Processing...'
+      );
+
+      fixture.whenStable().then(() => {
+        expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+          'Dummy new topics generated successfully.'
+        );
+      });
+    }));
+
+    it('should show error message if new topic data is not generated', waitForAsync(() => {
+      spyOn(adminBackendApiService, 'generateDummyTopicsAsync').and.returnValue(
+        Promise.reject('New topic data not generated.')
+      );
+      spyOn(component.setStatusMessage, 'emit');
+      component.generateNewTopics();
+
+      expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+        'Processing...'
+      );
+
+      fixture.whenStable().then(() => {
+        expect(component.setStatusMessage.emit).toHaveBeenCalledWith(
+          'Server error: New topic data not generated.'
         );
       });
     }));
@@ -655,7 +811,7 @@ describe('Admin dev mode activities tab', () => {
       }
     );
 
-    it('should generate dummy explorations', async(() => {
+    it('should generate dummy explorations', waitForAsync(() => {
       component.numDummyExpsToPublish = 1;
       component.numDummyExpsToGenerate = 2;
 
@@ -678,7 +834,7 @@ describe('Admin dev mode activities tab', () => {
       });
     }));
 
-    it('should show error message when dummy explorations are not generated', async(() => {
+    it('should show error message when dummy explorations are not generated', waitForAsync(() => {
       component.numDummyExpsToPublish = 2;
       component.numDummyExpsToGenerate = 2;
 
@@ -873,7 +1029,7 @@ describe('Admin dev mode activities tab', () => {
       expect(adminBackendSpy).not.toHaveBeenCalled();
     });
 
-    it('should reload collection', async(() => {
+    it('should reload collection', waitForAsync(() => {
       spyOn(adminBackendApiService, 'reloadCollectionAsync').and.returnValue(
         Promise.resolve()
       );
@@ -894,7 +1050,7 @@ describe('Admin dev mode activities tab', () => {
       });
     }));
 
-    it('should show error message is collection is not reloaded', async(() => {
+    it('should show error message is collection is not reloaded', waitForAsync(() => {
       const wrongCollectionId = 'wrongCollectionId';
 
       spyOn(adminBackendApiService, 'reloadCollectionAsync').and.returnValue(

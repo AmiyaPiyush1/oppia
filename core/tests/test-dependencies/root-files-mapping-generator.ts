@@ -49,6 +49,7 @@ interface AngularComponentInformation extends BaseAngularInformation {
   type: 'component';
   selector?: string;
   templateFilePath?: string;
+  styleUrlsFilePaths?: string[];
 }
 
 interface AngularDirectiveOrPipeInformation extends BaseAngularInformation {
@@ -80,8 +81,7 @@ const FILE_EXCLUSIONS_FOR_SEARCH = [
   'core/tests/test-dependencies',
   'core/templates/tests',
   'core/templates/utility/hashes.ts',
-  'webpack.*.ts',
-  'angular-template-style-url-replacer.webpack-loader.js',
+  'core/tests/playwright-acceptance-tests',
 ];
 
 const FILE_EXTENSIONS_FOR_SEARCH = [
@@ -110,14 +110,12 @@ const MANUALLY_MAPPED_DEPENDENCIES: Record<string, string[]> = {
   'core/templates/pages/oppia-root/index.ts': [
     'core/templates/pages/oppia-root/oppia-root.mainpage.html',
   ],
-  'core/templates/pages/lightweight-oppia-root/index.ts': [
-    'core/templates/pages/lightweight-oppia-root/lightweight-oppia-root.mainpage.html',
-  ],
 };
 
 const LIGHTHOUSE_MODULES = [
-  '.lighthouserc-performance.js',
-  '.lighthouserc-accessibility.js',
+  '.lighthouserc.js',
+  '.lighthouserc-base.js',
+  '.lighthouserc-desktop.js',
 ];
 
 const CI_TEST_SUITE_CONFIGS_DIRECTORY = path.resolve(
@@ -286,6 +284,18 @@ const getAngularInformationsFromSourceFile = (
           .getLiteralValue()
       : undefined;
 
+    const styleUrlsProperty = objectArgument.getProperty('styleUrls');
+    const styleUrls = styleUrlsProperty
+      ? styleUrlsProperty
+          .asKindOrThrow(ts.SyntaxKind.PropertyAssignment)
+          .getInitializerOrThrow()
+          .asKindOrThrow(ts.SyntaxKind.ArrayLiteralExpression)
+          .getElements()
+          .map(element =>
+            element.asKindOrThrow(ts.SyntaxKind.StringLiteral).getLiteralValue()
+          )
+      : [];
+
     return {
       type,
       className,
@@ -293,6 +303,9 @@ const getAngularInformationsFromSourceFile = (
       templateFilePath: templateUrl
         ? resolveModuleRelativeToRoot(templateUrl, sourceFile.getFilePath())
         : undefined,
+      styleUrlsFilePaths: styleUrls.map(styleUrl =>
+        resolveModuleRelativeToRoot(styleUrl, sourceFile.getFilePath())
+      ),
     };
   });
 };
@@ -475,11 +488,20 @@ const getDependenciesFromTypeScriptOrJavaScriptFile = (
     ) {
       dependencies.push(angularInformation.templateFilePath);
     }
+    // If the file is a component and has styleUrls file paths, we add them as
+    // dependencies so that the corresponding CSS files are associated with
+    // their component and trace up to the same root file.
+    if (
+      angularInformation.type === 'component' &&
+      angularInformation.styleUrlsFilePaths
+    ) {
+      dependencies.push(...angularInformation.styleUrlsFilePaths);
+    }
   });
 
   // If the file ends with '.import.ts', we check if there is a mainpage file
-  // that corresponds to it and add it as a dependency since Webpack loads
-  // these.
+  // that corresponds to it and add it as a dependency since these are loaded
+  // as part of the build.
   if (file.endsWith('.import.ts')) {
     const mainPageFilePath = file.replace('.import.ts', '.mainpage.html');
     if (fs.existsSync(path.join(ROOT_DIRECTORY, mainPageFilePath))) {

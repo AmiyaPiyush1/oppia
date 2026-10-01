@@ -42,14 +42,15 @@ import {Story} from 'domain/story/story.model';
 @Component({
   selector: 'oppia-story-editor-page',
   templateUrl: './story-editor-page.component.html',
+  styleUrls: ['./story-editor-page.component.css'],
 })
 export class StoryEditorPageComponent implements OnInit, OnDestroy {
-  warningsAreShown: boolean;
-  validationIssues: string[];
-  story: Story;
-  prepublishValidationIssues: string[];
-  forceValidateExplorations: boolean;
-  explorationValidationIssues: string[];
+  warningsAreShown!: boolean;
+  validationIssues!: string[];
+  story!: Story;
+  prepublishValidationIssues!: string[];
+  forceValidateExplorations!: boolean;
+  explorationValidationIssues!: string[];
 
   constructor(
     private undoRedoService: UndoRedoService,
@@ -129,6 +130,7 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
     } else if (activeTab === 'chapter_editor') {
       return 'Chapter Editor';
     }
+    throw new Error('Invalid active tab: ' + activeTab);
   }
 
   isWarningsAreShown(value: boolean): void {
@@ -161,7 +163,7 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
     }
     this._validateExplorations();
     let storyPrepublishValidationIssues = this.story.prepublishValidate();
-    let nodePrepublishValidationIssues = [].concat.apply(
+    let nodePrepublishValidationIssues: string[] = Array.prototype.concat.apply(
       [],
       nodes.map(node => node.prepublishValidate())
     );
@@ -172,7 +174,7 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
 
   _validateExplorations(): void {
     let nodes = this.story.getStoryContents().getNodes();
-    let explorationIds = [];
+    let explorationIds: string[] = [];
 
     if (
       this.storyEditorStateService.areAnyExpIdsChanged() ||
@@ -180,8 +182,9 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
     ) {
       this.explorationValidationIssues = [];
       for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].getExplorationId() !== null) {
-          explorationIds.push(nodes[i].getExplorationId());
+        const expId = nodes[i].getExplorationId();
+        if (expId !== null) {
+          explorationIds.push(expId);
         } else {
           this.explorationValidationIssues.push(
             "Some chapters don't have exploration IDs provided."
@@ -223,33 +226,36 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
     this.storyEditorNavigationService.navigateToStoryEditor();
   }
 
-  onClosingStoryEditorBrowserTab(): void {
+  onClosingStoryEditorBrowserTab = (): void => {
     const story = this.storyEditorStateService.getStory();
 
-    const storyEditorBrowserTabsInfo: EntityEditorBrowserTabsInfo =
+    const storyEditorBrowserTabsInfo: EntityEditorBrowserTabsInfo | null =
       this.localStorageService.getEntityEditorBrowserTabsInfo(
         EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS,
         story.getId()
       );
 
     if (
+      storyEditorBrowserTabsInfo &&
       storyEditorBrowserTabsInfo.doesSomeTabHaveUnsavedChanges() &&
       this.undoRedoService.getChangeCount() > 0
     ) {
       storyEditorBrowserTabsInfo.setSomeTabHasUnsavedChanges(false);
     }
-    storyEditorBrowserTabsInfo.decrementNumberOfOpenedTabs();
+    if (storyEditorBrowserTabsInfo) {
+      storyEditorBrowserTabsInfo.decrementNumberOfOpenedTabs();
 
-    this.localStorageService.updateEntityEditorBrowserTabsInfo(
-      storyEditorBrowserTabsInfo,
-      EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS
-    );
-  }
+      this.localStorageService.updateEntityEditorBrowserTabsInfo(
+        storyEditorBrowserTabsInfo,
+        EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS
+      );
+    }
+  };
 
   createStoryEditorBrowserTabsInfo(): void {
     const story = this.storyEditorStateService.getStory();
 
-    let storyEditorBrowserTabsInfo: EntityEditorBrowserTabsInfo =
+    let storyEditorBrowserTabsInfo: EntityEditorBrowserTabsInfo | null =
       this.localStorageService.getEntityEditorBrowserTabsInfo(
         EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS,
         story.getId()
@@ -277,22 +283,24 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
   updateStoryEditorBrowserTabsInfo(): void {
     const story = this.storyEditorStateService.getStory();
 
-    const storyEditorBrowserTabsInfo: EntityEditorBrowserTabsInfo =
+    const storyEditorBrowserTabsInfo: EntityEditorBrowserTabsInfo | null =
       this.localStorageService.getEntityEditorBrowserTabsInfo(
         EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS,
         story.getId()
       );
 
-    storyEditorBrowserTabsInfo.setLatestVersion(story.getVersion());
-    storyEditorBrowserTabsInfo.setSomeTabHasUnsavedChanges(false);
+    if (storyEditorBrowserTabsInfo) {
+      storyEditorBrowserTabsInfo.setLatestVersion(story.getVersion());
+      storyEditorBrowserTabsInfo.setSomeTabHasUnsavedChanges(false);
 
-    this.localStorageService.updateEntityEditorBrowserTabsInfo(
-      storyEditorBrowserTabsInfo,
-      EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS
-    );
+      this.localStorageService.updateEntityEditorBrowserTabsInfo(
+        storyEditorBrowserTabsInfo,
+        EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS
+      );
+    }
   }
 
-  onCreateOrUpdateStoryEditorBrowserTabsInfo(event: {key: string}): void {
+  onCreateOrUpdateStoryEditorBrowserTabsInfo = (event: {key: string}): void => {
     if (
       event.key ===
       EntityEditorBrowserTabsInfoDomainConstants.OPENED_STORY_EDITOR_BROWSER_TABS
@@ -300,7 +308,7 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
       this.storyEditorStalenessDetectionService.staleTabEventEmitter.emit();
       this.storyEditorStalenessDetectionService.presenceOfUnsavedChangesEventEmitter.emit();
     }
-  }
+  };
 
   ngOnInit(): void {
     this.loaderService.showLoadingScreen('Loading Story');
@@ -324,7 +332,7 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
     this.warningsAreShown = false;
     this.bottomNavbarStatusService.markBottomNavbarStatus(true);
     this.preventPageUnloadEventService.addListener(
-      this.undoRedoService.getChangeCount.bind(this.undoRedoService)
+      () => this.undoRedoService.getChangeCount() > 0
     );
     this.storyEditorStateService.loadStory(this.urlService.getStoryIdFromUrl());
     this.story = this.storyEditorStateService.getStory();
@@ -356,5 +364,9 @@ export class StoryEditorPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.directiveSubscriptions.unsubscribe();
+    this.windowRef.nativeWindow.removeEventListener(
+      'beforeunload',
+      this.onClosingStoryEditorBrowserTab
+    );
   }
 }

@@ -44,6 +44,10 @@ import INTERACTION_SPECS from 'interactions/interaction_specs.json';
 import {Rule} from 'domain/exploration/rule.model';
 import {GenerateContentIdService} from 'services/generate-content-id.service';
 import {Outcome} from 'domain/exploration/outcome.model';
+import {
+  SubtitledHtmlBackendDict,
+  SubtitledHtml,
+} from 'domain/exploration/subtitled-html.model';
 import {AppConstants} from 'app.constants';
 import {EditabilityService} from 'services/editability.service';
 import cloneDeep from 'lodash/cloneDeep';
@@ -51,8 +55,13 @@ import {InteractionSpecsKey} from 'pages/interaction-specs.constants';
 import {PlatformFeatureService} from 'services/platform-feature.service';
 
 interface TaggedMisconception {
-  skillId: string;
+  skillId: string | null;
   misconceptionId: number;
+}
+
+interface MisconceptionOutcome {
+  feedback: SubtitledHtmlBackendDict;
+  labelledAsCorrect: boolean;
 }
 
 interface DestValidation {
@@ -63,6 +72,7 @@ interface DestValidation {
 @Component({
   selector: 'oppia-add-answer-group-modal-component',
   templateUrl: './add-answer-group-modal.component.html',
+  styleUrls: ['./add-answer-group-modal.component.css'],
 })
 export class AddAnswerGroupModalComponent
   extends ConfirmOrCancelModal
@@ -93,6 +103,13 @@ export class AddAnswerGroupModalComponent
   validation: boolean = false;
   tagMisconceptionsFeatureFlagIsEnabled: boolean = false;
 
+  get misconceptionOutcome(): MisconceptionOutcome {
+    return {
+      feedback: this.tmpOutcome.feedback.toBackendDict(),
+      labelledAsCorrect: this.tmpOutcome.labelledAsCorrect,
+    };
+  }
+
   constructor(
     private ngbActiveModal: NgbActiveModal,
     private urlInterpolationService: UrlInterpolationService,
@@ -114,8 +131,13 @@ export class AddAnswerGroupModalComponent
     this.addState.emit(event);
   }
 
-  updateTaggedMisconception(taggedMisconception: TaggedMisconception): void {
-    this.tmpTaggedSkillMisconceptionId = `${taggedMisconception.skillId}-${taggedMisconception.misconceptionId}`;
+  updateTaggedMisconception(
+    taggedMisconception: TaggedMisconception | null
+  ): void {
+    this.tmpTaggedSkillMisconceptionId =
+      taggedMisconception !== null
+        ? `${taggedMisconception.skillId}-${taggedMisconception.misconceptionId}`
+        : null;
   }
 
   isSelfLoopWithNoFeedback(tmpOutcome: Outcome): boolean {
@@ -207,9 +229,11 @@ export class AddAnswerGroupModalComponent
       this.platformFeatureService.status.ExplorationEditorCanTagMisconceptions.isEnabled;
   }
 
-  updateAnswerGroupFeedback(outcome: Outcome): void {
+  updateAnswerGroupFeedback(outcome: MisconceptionOutcome): void {
     this.openFeedbackEditor();
-    this.tmpOutcome.feedback = outcome.feedback;
+    this.tmpOutcome.feedback = SubtitledHtml.createFromBackendDict(
+      outcome.feedback
+    );
   }
 
   ngAfterViewInit(): void {
@@ -218,5 +242,16 @@ export class AddAnswerGroupModalComponent
 
   ngOnDestroy(): void {
     this.eventBusGroup.unsubscribe();
+  }
+
+  isRuleValid(): boolean {
+    if (
+      this.currentInteractionId === 'NumericInput' &&
+      this.tmpRule.type === 'IsWithinTolerance'
+    ) {
+      const tolerance = this.tmpRule.inputs.tol;
+      return typeof tolerance === 'number' ? tolerance >= 0 : true;
+    }
+    return true;
   }
 }

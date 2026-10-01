@@ -19,10 +19,10 @@
 import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 import {RouterModule} from '@angular/router';
 
-import {JoyrideModule, JoyrideService, LoggerService} from 'ngx-joyride';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatMenuModule} from '@angular/material/menu';
 import {SharedComponentsModule} from 'components/shared-component.module';
+import {FeedbackSharedModule} from 'components/feedback-shared/feedback-shared.module';
 import {StateParamChangesEditorComponent} from './editor-tab/state-param-changes-editor/state-param-changes-editor.component';
 import {DeleteStateSkillModalComponent} from './editor-tab/templates/modal-templates/delete-state-skill-modal.component';
 import {InteractionExtensionsModule} from 'interactions/interactions.module';
@@ -103,7 +103,6 @@ import {EditorFirstTimeEventsService} from './services/editor-first-time-events.
 import {EditabilityService} from 'services/editability.service';
 import {EditableExplorationBackendApiService} from 'domain/exploration/editable-exploration-backend-api.service';
 import {EntityTranslationsService} from 'services/entity-translations.services';
-import {EntityVoiceoversService} from 'services/entity-voiceovers.services';
 import {EventBusService} from 'app-events/event-bus.service';
 import {ExplorationAutomaticTextToSpeechService} from './services/exploration-automatic-text-to-speech.service';
 import {ExplorationCategoryService} from './services/exploration-category.service';
@@ -174,7 +173,6 @@ import {ValidatorsService} from 'services/validators.service';
 import {VersionHistoryBackendApiService} from './services/version-history-backend-api.service';
 import {VersionHistoryService} from './services/version-history.service';
 import {VoiceoverBackendApiService} from 'domain/voiceover/voiceover-backend-api.service';
-import {VoiceoverPlayerService} from 'pages/exploration-player-page/services/voiceover-player.service';
 import {WindowDimensionsService} from 'services/contextual/window-dimensions.service';
 
 @NgModule({
@@ -195,8 +193,8 @@ import {WindowDimensionsService} from 'services/contextual/window-dimensions.ser
     MatMenuModule,
     FormsModule,
     MatPaginatorModule,
-    JoyrideModule.forRoot(),
     SharedComponentsModule,
+    FeedbackSharedModule,
     ExplorationPlayerViewerCommonModule,
     OppiaCkEditorCopyToolBarModule,
     ToastrModule.forRoot(toastrConfig),
@@ -323,7 +321,6 @@ import {WindowDimensionsService} from 'services/contextual/window-dimensions.ser
     EditabilityService,
     EditableExplorationBackendApiService,
     EntityTranslationsService,
-    EntityVoiceoversService,
     EventBusService,
     ExplorationAutomaticTextToSpeechService,
     ExplorationCategoryService,
@@ -357,10 +354,8 @@ import {WindowDimensionsService} from 'services/contextual/window-dimensions.ser
     InteractionDetailsCacheService,
     InteractionRulesRegistryService,
     InternetConnectivityService,
-    JoyrideService,
     LanguageUtilService,
     LocalStorageService,
-    LoggerService,
     ParameterMetadataService,
     PlatformFeatureService,
     PopulateRuleContentIdsService,
@@ -396,7 +391,6 @@ import {WindowDimensionsService} from 'services/contextual/window-dimensions.ser
     VersionHistoryBackendApiService,
     VersionHistoryService,
     VoiceoverBackendApiService,
-    VoiceoverPlayerService,
     WindowDimensionsService,
   ],
 })

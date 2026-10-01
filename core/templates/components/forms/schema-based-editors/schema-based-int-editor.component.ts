@@ -32,6 +32,7 @@ import {
   AbstractControl,
   ValidationErrors,
 } from '@angular/forms';
+import {NumberConversionService} from 'services/number-conversion.service';
 import {SchemaFormSubmittedService} from 'services/schema-form-submitted.service';
 import {FocusManagerService} from 'services/stateful/focus-manager.service';
 import {validate} from 'components/forms/validators/schema-validators';
@@ -40,7 +41,7 @@ import {Validator as OppiaValidator} from 'interactions/TextInput/directives/tex
 @Component({
   selector: 'schema-based-int-editor',
   templateUrl: './schema-based-int-editor.component.html',
-  styleUrls: [],
+  styleUrls: ['./schema-based-int-editor.component.css'],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -70,6 +71,7 @@ export class SchemaBasedIntEditorComponent
   onChange: (val: number) => void = () => {};
   constructor(
     private focusManagerService: FocusManagerService,
+    private numberConversionService: NumberConversionService,
     private schemaFormSubmittedService: SchemaFormSubmittedService
   ) {}
 
@@ -91,7 +93,7 @@ export class SchemaBasedIntEditorComponent
     if (control && typeof control.value !== 'number') {
       return {invalidType: typeof control.value};
     }
-    return validate(control, this.validators);
+    return validate(control, this.validators, this.numberConversionService);
   }
 
   onKeypress(evt: KeyboardEvent): void {

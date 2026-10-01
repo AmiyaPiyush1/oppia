@@ -191,6 +191,7 @@ describe('Contributor badge component', () => {
   describe('when user navigates to contributor badge page ', () => {
     describe('when user has translation badges and question rights ', () => {
       const userContributionRights = {
+        can_submit_translation_for_language_codes: [],
         can_review_translation_for_language_codes: ['es', 'pt', 'hi'],
         can_review_voiceover_for_language_codes: ['es', 'pt', 'hi'],
         can_review_questions: true,
@@ -246,6 +247,23 @@ describe('Contributor badge component', () => {
         expect(component.questionReviewBadges.length).toBeGreaterThan(0);
       }));
 
+      it(
+        'should show review and correction badges when a language has both ' +
+          'submission and review stats',
+        fakeAsync(() => {
+          component.selectLanguageOption('Spanish');
+
+          expect(component.userCanReviewTranslationSuggestion).toBeTrue();
+          expect(component.reviewableLanguages).toContain('Spanish');
+          expect(
+            component.translationBadges.Spanish.review.length
+          ).toBeGreaterThan(0);
+          expect(
+            component.translationBadges.Spanish.correction.length
+          ).toBeGreaterThan(0);
+        })
+      );
+
       it('should toggle language dropdown when user clicks on it', fakeAsync(() => {
         component.dropdownShown = false;
 
@@ -295,6 +313,7 @@ describe('Contributor badge component', () => {
 
     describe('when user has no translation badges and no question rights ', () => {
       const userContributionRights = {
+        can_submit_translation_for_language_codes: [],
         can_review_translation_for_language_codes: [],
         can_review_voiceover_for_language_codes: [],
         can_review_questions: false,

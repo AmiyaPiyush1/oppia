@@ -16,6 +16,9 @@
  * @fileoverview Utility File for declaring and initializing users.
  */
 
+import fs from 'fs';
+import path from 'path';
+
 import {SuperAdminFactory, SuperAdmin} from '../user/super-admin';
 import {BaseUserFactory, BaseUser} from './puppeteer-utils';
 import {
@@ -65,6 +68,11 @@ import {
 } from '../user/contributor-admin';
 import {TranslationCoordinatorFactory} from '../user/translation-coordinator';
 import {QuestionCoordinatorFactory} from '../user/practice-question-coordinator';
+import {
+  CollectionEditor,
+  CollectionEditorFactory,
+} from '../user/collection-editor';
+import {TechTeamLeadFactory} from '../user/tech-team-lead';
 
 const ROLES = testConstants.Roles;
 const cookieBannerAcceptButton =
@@ -87,6 +95,8 @@ const USER_ROLE_MAPPING = {
   [ROLES.RELEASE_COORDINATOR]: ReleaseCoordinatorFactory,
   [ROLES.TRANSLATION_REVIEWER]: TranslationReviewerFactory,
   [ROLES.VOICEOVER_SUBMITTER]: VoiceoverSubmitterFactory,
+  [ROLES.COLLECTION_EDITOR]: CollectionEditorFactory,
+  [ROLES.TECH_TEAM_LEAD]: TechTeamLeadFactory,
 } as const;
 
 const USERS_ROLES_NOT_REFLECTED_IN_ADMIN_PAGE: string[] = [
@@ -121,7 +131,8 @@ type BasicRolesUser = LoggedOutUser &
   Contributor &
   ContributorAdmin &
   PracticeQuestionReviewer &
-  VoiceoverSubmitter;
+  VoiceoverSubmitter &
+  CollectionEditor;
 
 /**
  * Global user instances that are created and can be reused again.
@@ -299,6 +310,8 @@ export class UserFactory {
       ContributorAdminFactory(),
       PracticeQuestionReviewerFactory(),
       VoiceoverSubmitterFactory(),
+      CollectionEditorFactory(),
+      TechTeamLeadFactory(),
     ]);
 
     user.username = username;
@@ -365,6 +378,31 @@ export class UserFactory {
    * This function closes all the browsers opened by different users.
    */
   static closeAllBrowsers = async function (): Promise<void> {
+    const configFile = path.resolve(
+      __dirname,
+      '../../jest-runtime-config.json'
+    );
+    if (activeUsers.length === 0 && fs.existsSync(configFile)) {
+      try {
+        const configData = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+        if (configData.testFailureDetected) {
+          fs.unlinkSync(configFile);
+          const fallbackUser = BaseUser.instances[0];
+          if (fallbackUser) {
+            await fallbackUser.captureScreenshotsForFailedTest();
+          } else {
+            showMessage(
+              'Test failed but no browser instances were available to capture screenshots.'
+            );
+          }
+        }
+      } catch (error) {
+        showMessage(
+          `Error while handling screenshot capture for failed test: ${error}`
+        );
+      }
+    }
+
     showMessage(`Closing browsers for ${activeUsers.length} users.`);
     await Promise.all(
       activeUsers.map(async user => {
@@ -373,6 +411,12 @@ export class UserFactory {
     );
 
     showMessage('All browsers closed.');
+
+    if (BaseUser.serverErrors.length > 0) {
+      const errors = BaseUser.serverErrors.join('\n');
+      BaseUser.serverErrors = [];
+      throw new Error(`Server errors detected during the test run:\n${errors}`);
+    }
   };
 
   /**

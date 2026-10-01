@@ -84,6 +84,9 @@ const reloadCollectionsRowsSelector = '.e2e-test-reload-collection-row';
 
 // Other.
 const loadDummyMathClassRoomButton = '.load-dummy-math-classroom';
+const noOfClassroomsToGeneratorField =
+  '#label-target-number-of-classrooms-to-generate';
+const numDummyMathClassroomsToGenerate = '1';
 const prodModeActivitiesTab = 'oppia-admin-prod-mode-activities-tab';
 
 // Misc Tab selectors.
@@ -130,12 +133,23 @@ const userRolesVisualizationContainerSelector =
 const platformParameterDefaultValueContainerSelector =
   '.e2e-test-platform-param-default-value-container';
 
+// Auto Translation.
+const autoTranslationToggleInputSelector =
+  '.e2e-test-auto-translation-toggle input';
+const autoTranslationToggleLabelSelector =
+  '.e2e-test-auto-translation-toggle label';
+const languageDropdownSelector = '.e2e-test-language-dropdown';
+const providerDropdownSelector = '.e2e-test-provider-dropdown';
+const addMappingButtonSelector = '.e2e-test-add-mapping-btn';
+const mappingRowSelector = '.e2e-test-mapping-row';
+
 export class SuperAdmin extends BaseUser {
   /**
    * Navigates to the Admin Page Activities Tab.
    */
   async navigateToAdminPageActivitiesTab(): Promise<void> {
     await this.goto(adminPageActivitiesTab);
+    await this.waitForNetworkIdle();
   }
 
   async navigateToAdminPageMiscTab(): Promise<void> {
@@ -569,19 +583,31 @@ export class SuperAdmin extends BaseUser {
   async reloadCollections(collectionName: string): Promise<void> {
     try {
       await this.navigateToAdminPageActivitiesTab();
-      await this.page.waitForSelector(reloadCollectionsRowsSelector);
 
+      await this.page.waitForSelector(reloadCollectionsRowsSelector, {
+        visible: true,
+        timeout: 30000,
+      });
       const reloadCollectionRows = await this.page.$$(
         reloadCollectionsRowsSelector
       );
+
+      if (reloadCollectionRows.length === 0) {
+        throw new Error(
+          `No collection rows found. "${collectionName}" may not be seeded in prod_env.`
+        );
+      }
       for (let i = 0; i < reloadCollectionRows.length; i++) {
         const collectionNameElement = await reloadCollectionRows[i].$(
           reloadCollectionTitleSelector
         );
-        await this.page.waitForSelector(reloadCollectionTitleSelector, {
-          visible: true,
-        });
 
+        await reloadCollectionRows[i].waitForSelector(
+          reloadCollectionTitleSelector,
+          {
+            visible: true,
+          }
+        );
         const name = await this.page.evaluate(
           element => element.innerText,
           collectionNameElement
@@ -590,10 +616,12 @@ export class SuperAdmin extends BaseUser {
           const reloadButton = await reloadCollectionRows[i].$(
             reloadCollectionButton
           );
-          await this.page.waitForSelector(reloadCollectionButton, {
-            visible: true,
-          });
-
+          await reloadCollectionRows[i].waitForSelector(
+            reloadCollectionButton,
+            {
+              visible: true,
+            }
+          );
           if (!reloadButton) {
             throw new Error(
               `Reload button not found for collection "${collectionName}"`
@@ -601,7 +629,6 @@ export class SuperAdmin extends BaseUser {
           }
           await this.waitForElementToBeClickable(reloadButton);
           await reloadButton.click();
-
           await this.waitForNetworkIdle();
           await this.expectActionStatusMessageToBe(
             'Data reloaded successfully.'
@@ -609,7 +636,6 @@ export class SuperAdmin extends BaseUser {
           return;
         }
       }
-
       throw new Error(`Collection "${collectionName}" not found`);
     } catch (error) {
       console.error(
@@ -619,7 +645,6 @@ export class SuperAdmin extends BaseUser {
       throw error;
     }
   }
-
   /**
    * Generates and publishes dummy activities.
    * @param {number} noToGenerate - The number of activities to generate.
@@ -753,6 +778,10 @@ export class SuperAdmin extends BaseUser {
   async generateDummyMathClassroom(): Promise<void> {
     await this.navigateToAdminPageActivitiesTab();
     await this.page.waitForSelector(loadDummyMathClassRoomButton);
+    await this.page.type(
+      noOfClassroomsToGeneratorField,
+      numDummyMathClassroomsToGenerate
+    );
     await this.clickOnElementWithSelector(loadDummyMathClassRoomButton);
 
     await this.waitForNetworkIdle();
@@ -833,10 +862,10 @@ export class SuperAdmin extends BaseUser {
    */
   async expectControlsNotAvailable(): Promise<void> {
     try {
-      const activitiesTabElement = await this.page.$(prodModeActivitiesTab);
-      const activitiesTabText = await this.page.evaluate(
-        element => element.textContent,
-        activitiesTabElement
+      await this.expectElementToBeVisible(prodModeActivitiesTab);
+      const activitiesTabText = await this.page.$eval(
+        prodModeActivitiesTab,
+        element => element.textContent ?? ''
       );
       const expectedText =
         "The 'Activities' tab is not available in the production environment.";
@@ -1019,12 +1048,13 @@ export class SuperAdmin extends BaseUser {
       );
       showMessage('Default value changed successfully.');
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
       console.error(
         `Failed to change default value of platform parameter "${platformParam}".\n` +
           'Original Error:\n' +
-          error.stack
+          err.stack
       );
-      throw error;
+      throw err;
     }
   }
 
@@ -1373,6 +1403,121 @@ export class SuperAdmin extends BaseUser {
     }
 
     return platformParameterContainerElements[index];
+  }
+
+  /**
+   * Navigates to the contributor dashboard admin page.
+   */
+  async navigateToContributorDashboardAdminPage(): Promise<void> {
+    await this.goto(testConstants.URLs.ContributorDashboardAdmin);
+  }
+
+  /**
+   * Enables automatic translation suggestions in the contributor dashboard admin page.
+   */
+  async enableAutoTranslation(): Promise<void> {
+    // The Material slide toggle renders its actual checkbox input as
+    // cdk-visually-hidden (off-screen), overlapped by the thumb div.
+    // Puppeteer's clickability check blocks clicks on the hidden input, so
+    // we read the checked state from the input but click the visible label.
+    await this.page.waitForSelector(autoTranslationToggleInputSelector);
+    const isChecked = await this.page.$eval(
+      autoTranslationToggleInputSelector,
+      el => (el as HTMLInputElement).checked
+    );
+    if (!isChecked) {
+      await this.clickOnElementWithSelector(autoTranslationToggleLabelSelector);
+    }
+  }
+
+  /**
+   * Adds a new translation provider mapping.
+   *
+   * @param {string} languageCode - The language code for the mapping.
+   * @param {string} providerId - The ID of the translation provider.
+   */
+  async addTranslationProviderMapping(
+    languageCode: string,
+    providerId: string
+  ): Promise<void> {
+    await this.page.waitForSelector(languageDropdownSelector);
+    await this.page.select(languageDropdownSelector, languageCode);
+
+    await this.page.waitForSelector(providerDropdownSelector);
+    await this.page.select(providerDropdownSelector, providerId);
+
+    await this.clickOnElementWithSelector(addMappingButtonSelector);
+  }
+
+  /**
+   * Removes an existing translation provider mapping.
+   *
+   * @param {string} languageCode - The language code of the mapping to remove.
+   */
+  async removeTranslationProviderMapping(languageCode: string): Promise<void> {
+    const removeButton = `.e2e-test-remove-mapping-btn[aria-label="Remove ${languageCode}"]`;
+    await this.clickOnElementWithSelector(removeButton);
+  }
+
+  /**
+   * Gets the total number of translation provider mappings.
+   *
+   * @returns {Promise<number>} - A promise that resolves to the number of provider mappings.
+   */
+  async getProviderMappingRowCount(): Promise<number> {
+    const rows = await this.page.$$(mappingRowSelector);
+    return rows.length;
+  }
+
+  /**
+   * Expects a translation provider mapping to be present.
+   *
+   * @param {string} languageCode - The language code.
+   * @param {string} providerDisplayText - The text of the translation provider displayed.
+   */
+  async expectTranslationProviderMappingToBePresent(
+    languageCode: string,
+    providerDisplayText: string
+  ): Promise<void> {
+    const removeButtonSelector = `.e2e-test-remove-mapping-btn[aria-label="Remove ${languageCode}"]`;
+    await this.expectElementToBeVisible(removeButtonSelector);
+
+    const rowElement = await this.page.evaluateHandle(selector => {
+      const button = document.querySelector(selector);
+      return button ? button.closest('tr') : null;
+    }, removeButtonSelector);
+
+    const isRowPresent = await this.page.evaluate(
+      el => el !== null,
+      rowElement
+    );
+
+    if (!isRowPresent) {
+      throw new Error(`Mapping row for ${languageCode} not found.`);
+    }
+
+    const rowText = await this.page.evaluate(
+      el => (el as HTMLElement).innerText,
+      rowElement
+    );
+
+    if (!rowText.includes(providerDisplayText)) {
+      throw new Error(
+        `Provider mapping for "${languageCode}" is missing the provider text "${providerDisplayText}". Found: ${rowText}`
+      );
+    }
+  }
+
+  /**
+   * Expects a translation provider mapping to be absent.
+   *
+   * @param {string} languageCode - The language code.
+   */
+  async expectTranslationProviderMappingToBeAbsent(
+    languageCode: string
+  ): Promise<void> {
+    const removeButtonSelector = `.e2e-test-remove-mapping-btn[aria-label="Remove ${languageCode}"]`;
+    await this.expectElementToBeVisible(removeButtonSelector, false);
   }
 }
 

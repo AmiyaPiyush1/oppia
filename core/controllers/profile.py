@@ -189,6 +189,9 @@ class BulkEmailWebhookEndpoint(
                 user_email_preferences.can_receive_editor_role_email,
                 user_email_preferences.can_receive_feedback_message_email,
                 user_email_preferences.can_receive_subscription_email,
+                can_receive_contributor_dashboard_email=(
+                    user_email_preferences.can_receive_contributor_dashboard_email
+                ),
                 bulk_email_db_already_updated=True,
             )
         elif self.normalized_request['type'] == 'unsubscribe':
@@ -198,6 +201,9 @@ class BulkEmailWebhookEndpoint(
                 user_email_preferences.can_receive_editor_role_email,
                 user_email_preferences.can_receive_feedback_message_email,
                 user_email_preferences.can_receive_subscription_email,
+                can_receive_contributor_dashboard_email=(
+                    user_email_preferences.can_receive_contributor_dashboard_email
+                ),
                 bulk_email_db_already_updated=True,
             )
         self.render_json({})
@@ -319,6 +325,9 @@ class PreferencesHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
 
         self.values.update(
             {
+                'profile_name_for_certificate': (
+                    user_settings.profile_name_for_certificate
+                ),
                 'preferred_language_codes': user_settings.preferred_language_codes,
                 'preferred_site_language_code': (
                     user_settings.preferred_site_language_code
@@ -343,6 +352,9 @@ class PreferencesHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
                 ),
                 'can_receive_subscription_email': (
                     user_email_preferences.can_receive_subscription_email
+                ),
+                'can_receive_contributor_dashboard_email': (
+                    user_email_preferences.can_receive_contributor_dashboard_email
                 ),
                 'subscription_list': subscription_list,
             }
@@ -373,6 +385,7 @@ class PreferencesHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
                     'can_receive_editor_role_email',
                     'can_receive_feedback_message_email',
                     'can_receive_subscription_email',
+                    'can_receive_contributor_dashboard_email',
                 ]
                 missing_keys = [key for key in required_keys if key not in data]
                 if missing_keys:
@@ -400,6 +413,9 @@ class PreferencesHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
                         data['can_receive_editor_role_email'],
                         data['can_receive_feedback_message_email'],
                         data['can_receive_subscription_email'],
+                        can_receive_contributor_dashboard_email=(
+                            data['can_receive_contributor_dashboard_email']
+                        ),
                     )
                 )
             elif update_type == 'user_bio':
@@ -410,6 +426,9 @@ class PreferencesHandler(base.BaseHandler[Dict[str, str], Dict[str, str]]):
                         % feconf.MAX_BIO_LENGTH_IN_CHARS
                     )
                 user_settings.user_bio = data
+            elif update_type == 'profile_name_for_certificate':
+                self.__validate_data_type(update_type, str, data)
+                user_settings.profile_name_for_certificate = data
             elif update_type == 'preferred_site_language_code':
                 self.__validate_data_type(update_type, str, data)
                 user_settings.preferred_site_language_code = data
@@ -451,6 +470,19 @@ class SignupPageNormalizedRequestDict(TypedDict):
     return_url: Optional[str]
 
 
+def _is_safe_internal_return_url(return_url: str) -> bool:
+    """Checks whether return_url is safe for same-origin redirection."""
+    # Allow only absolute paths on the current origin.
+    if not return_url.startswith('/'):
+        return False
+    if return_url.startswith('//'):
+        return False
+
+    # Block control characters and spaces that browsers may strip/normalize,
+    # as well as backslashes that some user agents normalize into slashes.
+    return re.search(r'[\x00-\x20\x7f\\]', return_url) is None
+
+
 class SignupPage(
     base.BaseHandler[Dict[str, str], SignupPageNormalizedRequestDict]
 ):
@@ -475,7 +507,7 @@ class SignupPage(
         fetched_url = self.normalized_request.get('return_url')
         return_url = self.request.uri if fetched_url is None else fetched_url
         # Validating return_url for no external redirections.
-        if re.match('^/[^//]', return_url) is None:
+        if not _is_safe_internal_return_url(return_url):
             return_url = '/'
         if user_services.has_fully_registered_account(self.user_id):
             self.redirect(return_url)
@@ -575,6 +607,9 @@ class SignupHandler(
             feconf.DEFAULT_EDITOR_ROLE_EMAIL_PREFERENCE,
             feconf.DEFAULT_FEEDBACK_MESSAGE_EMAIL_PREFERENCE,
             feconf.DEFAULT_SUBSCRIPTION_EMAIL_PREFERENCE,
+            can_receive_contributor_dashboard_email=(
+                feconf.DEFAULT_CONTRIBUTOR_DASHBOARD_EMAIL_PREFERENCE
+            ),
         )
         # Only block registration if bulk email configuration failed and the
         # user requested bulk emails.
@@ -839,23 +874,19 @@ class UserInfoHandler(
         self.response.cache_control.no_store = True
         if self.username:
             assert self.user_id is not None
-            user_actions = user_services.get_user_actions_info(
-                self.user_id
-            ).actions
-            user_settings = user_services.get_user_settings(
-                self.user_id, strict=True
+            roles, user_actions, user_settings = (
+                user_services.get_user_roles_and_actions(self.user_id)
             )
+            assert user_settings is not None
             self.render_json(
                 {
-                    'roles': self.roles,
-                    'is_moderator': (user_services.is_moderator(self.user_id)),
-                    'is_curriculum_admin': user_services.is_curriculum_admin(
-                        self.user_id
+                    'roles': roles,
+                    'is_moderator': feconf.ROLE_ID_MODERATOR in roles,
+                    'is_curriculum_admin': (
+                        feconf.ROLE_ID_CURRICULUM_ADMIN in roles
                     ),
                     'is_super_admin': self.current_user_is_super_admin,
-                    'is_topic_manager': (
-                        user_services.is_topic_manager(self.user_id)
-                    ),
+                    'is_topic_manager': feconf.ROLE_ID_TOPIC_MANAGER in roles,
                     'can_create_collections': bool(
                         role_services.ACTION_CREATE_COLLECTION in user_actions
                     ),

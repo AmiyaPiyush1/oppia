@@ -1,4 +1,4 @@
-// Copyright 2024 The Oppia Authors. All Rights Reserved.
+// Copyright 2026 The Oppia Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,6 +74,7 @@ interface TranslationContributionStat {
 interface ContributionReviewersResult {
   usernames?: string[];
   REVIEW_TRANSLATION?: string[];
+  SUBMIT_TRANSLATION?: string[];
   REVIEW_QUESTION?: boolean;
   SUBMIT_QUESTION?: boolean;
 }
@@ -85,12 +86,14 @@ interface LanguageCodeDescription {
 @Component({
   selector: 'contributor-dashboard-admin-page',
   templateUrl: './contributor-dashboard-admin-page.component.html',
+  styleUrls: ['./contributor-dashboard-admin-page.component.css'],
 })
 export class ContributorDashboardAdminPageComponent implements OnInit {
   taskRunningInBackground: boolean = false;
   statusMessage: string = '';
   UserIsTranslationAdmin: boolean = false;
   isNewUiEnabled: boolean = false;
+  isAutoTranslationEnabled: boolean = false;
 
   USER_FILTER_CRITERION_ROLE: string;
   USER_FILTER_CRITERION_USERNAME: string;
@@ -205,6 +208,8 @@ export class ContributorDashboardAdminPageComponent implements OnInit {
   ngOnInit(): void {
     this.isNewUiEnabled =
       this.platformFeatureService.status.CdAdminDashboardNewUi.isEnabled;
+    this.isAutoTranslationEnabled =
+      this.platformFeatureService.status.EnableAutomaticTranslationSuggestions.isEnabled;
     this.userService.getUserInfoAsync().then(userInfo => {
       let translationCategories = {};
       let questionCategories = {};
@@ -213,6 +218,8 @@ export class ContributorDashboardAdminPageComponent implements OnInit {
         translationCategories = {
           REVIEW_TRANSLATION:
             AppConstants.CD_USER_RIGHTS_CATEGORY_REVIEW_TRANSLATION,
+          SUBMIT_TRANSLATION:
+            AppConstants.CD_USER_RIGHTS_CATEGORY_SUBMIT_TRANSLATION,
         };
       }
       if (userInfo.isQuestionAdmin() || userInfo.isQuestionCoordinator()) {
@@ -331,6 +338,16 @@ export class ContributorDashboardAdminPageComponent implements OnInit {
                   contributionRights.can_review_translation_for_language_codes
                 ),
               };
+            }
+            if (
+              this.CD_USER_RIGHTS_CATEGORIES.hasOwnProperty(
+                'SUBMIT_TRANSLATION'
+              )
+            ) {
+              this.contributionReviewersResult.SUBMIT_TRANSLATION =
+                this.getLanguageDescriptions(
+                  contributionRights.can_submit_translation_for_language_codes
+                );
             }
             if (
               this.CD_USER_RIGHTS_CATEGORIES.hasOwnProperty('REVIEW_QUESTION')

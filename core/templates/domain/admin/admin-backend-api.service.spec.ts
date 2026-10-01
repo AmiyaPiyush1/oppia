@@ -58,12 +58,13 @@ describe('Admin backend api service', () => {
         id: 'VqgPTpt7JyJy',
         topic_model_last_updated: 1591196558882.2,
         language_code: 'en',
-        thumbnail_filename: null,
-        thumbnail_bg_color: null,
+        thumbnail_filename: '',
+        thumbnail_bg_color: '',
         total_published_node_count: 0,
         can_edit_topic: true,
         is_published: false,
         url_fragment: '',
+        can_edit_question: true,
         total_upcoming_chapters_count: 1,
         total_overdue_chapters_count: 1,
         total_chapter_counts_for_each_story: [5, 4],
@@ -125,7 +126,7 @@ describe('Admin backend api service', () => {
         description: 'description',
         notes: '',
         story_contents: {
-          initial_node_id: null,
+          initial_node_id: 'node_1',
           nodes: [],
           next_node_id: 'node_1',
         },
@@ -136,6 +137,12 @@ describe('Admin backend api service', () => {
         thumbnail_filename: 'thumbnail.svg',
         url_fragment: 'tjbtqqfejb',
         meta_tag_content: 'dummy_meta',
+      },
+    ],
+    classroom_list: [
+      {
+        classroom_id: 'classroomId1',
+        name: 'math',
       },
     ],
   };
@@ -171,6 +178,10 @@ describe('Admin backend api service', () => {
       storyList: adminBackendResponse.story_list.map(dict =>
         Story.createFromBackendDict(dict)
       ),
+      classroomList: adminBackendResponse.classroom_list.map(dict => ({
+        classroomId: dict.classroom_id,
+        name: dict.name,
+      })),
     };
 
     spyOn(csrfService, 'getTokenAsync').and.callFake(async () => {
@@ -1937,9 +1948,10 @@ describe('Admin backend api service', () => {
     let action = 'generate_dummy_classroom';
     let payload = {
       action: action,
+      num_dummy_classrooms_to_generate: 3,
     };
 
-    abas.generateDummyClassroomDataAsync().then(successHandler, failHandler);
+    abas.generateDummyClassroomDataAsync(3).then(successHandler, failHandler);
 
     let req = httpTestingController.expectOne('/adminhandler');
     expect(req.request.method).toEqual('POST');
@@ -1955,9 +1967,10 @@ describe('Admin backend api service', () => {
     let action = 'generate_dummy_classroom';
     let payload = {
       action: action,
+      num_dummy_classrooms_to_generate: 3,
     };
 
-    abas.generateDummyClassroomDataAsync().then(successHandler, failHandler);
+    abas.generateDummyClassroomDataAsync(3).then(successHandler, failHandler);
 
     let req = httpTestingController.expectOne('/adminhandler');
     expect(req.request.method).toEqual('POST');
@@ -1973,6 +1986,107 @@ describe('Admin backend api service', () => {
     );
     flushMicrotasks();
 
+    expect(successHandler).not.toHaveBeenCalled();
+    expect(failHandler).toHaveBeenCalledWith('Failed to get data.');
+  }));
+
+  it('should generate dummy default classroom data', fakeAsync(() => {
+    let action = 'generate_dummy_default_classroom';
+    let payload = {
+      action: action,
+      num_dummy_classrooms_to_generate: 3,
+    };
+
+    abas
+      .generateDummyDefaultClassroomsAsync(3)
+      .then(successHandler, failHandler);
+
+    let req = httpTestingController.expectOne('/adminhandler');
+    expect(req.request.method).toEqual('POST');
+    expect(req.request.body).toEqual(payload);
+    req.flush(200);
+    flushMicrotasks();
+
+    expect(successHandler).toHaveBeenCalled();
+    expect(failHandler).not.toHaveBeenCalled();
+  }));
+
+  it('should handle generate dummy default classroom data request failure', fakeAsync(() => {
+    let action = 'generate_dummy_default_classroom';
+    let payload = {
+      action: action,
+      num_dummy_classrooms_to_generate: 3,
+    };
+
+    abas
+      .generateDummyDefaultClassroomsAsync(3)
+      .then(successHandler, failHandler);
+
+    let req = httpTestingController.expectOne('/adminhandler');
+    expect(req.request.method).toEqual('POST');
+    expect(req.request.body).toEqual(payload);
+    req.flush(
+      {
+        error: 'Failed to get data.',
+      },
+      {
+        status: 500,
+        statusText: 'Internal Server Error',
+      }
+    );
+    flushMicrotasks();
+
+    expect(successHandler).not.toHaveBeenCalled();
+    expect(failHandler).toHaveBeenCalledWith('Failed to get data.');
+  }));
+
+  it('should generate dummy topic data', fakeAsync(() => {
+    let action = 'generate_dummy_topics';
+    let payload = {
+      action: action,
+      num_dummy_topics_to_generate: 3,
+      dummy_topic_classroom_id: 'classroomId1',
+    };
+
+    abas
+      .generateDummyTopicsAsync(3, 'classroomId1')
+      .then(successHandler, failHandler);
+
+    let req = httpTestingController.expectOne('/adminhandler');
+    expect(req.request.method).toEqual('POST');
+    expect(req.request.body).toEqual(payload);
+    req.flush(200);
+    flushMicrotasks();
+
+    expect(successHandler).toHaveBeenCalled();
+    expect(failHandler).not.toHaveBeenCalled();
+  }));
+
+  it('should handle generate dummy new topic data request failure', fakeAsync(() => {
+    let action = 'generate_dummy_topics';
+    let payload = {
+      action: action,
+      num_dummy_topics_to_generate: 3,
+      dummy_topic_classroom_id: 'classroomId1',
+    };
+
+    abas
+      .generateDummyTopicsAsync(3, 'classroomId1')
+      .then(successHandler, failHandler);
+
+    let req = httpTestingController.expectOne('/adminhandler');
+    expect(req.request.method).toEqual('POST');
+    expect(req.request.body).toEqual(payload);
+    req.flush(
+      {
+        error: 'Failed to get data.',
+      },
+      {
+        status: 500,
+        statusText: 'Internal Server Error',
+      }
+    );
+    flushMicrotasks();
     expect(successHandler).not.toHaveBeenCalled();
     expect(failHandler).toHaveBeenCalledWith('Failed to get data.');
   }));

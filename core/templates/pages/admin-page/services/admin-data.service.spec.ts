@@ -59,6 +59,7 @@ describe('Admin Data Service', () => {
         total_published_node_count: 10,
         url_fragment: 'topicurlfrag',
         can_edit_topic: false,
+        can_edit_question: false,
         is_published: false,
         total_upcoming_chapters_count: 1,
         total_overdue_chapters_count: 1,
@@ -98,6 +99,12 @@ describe('Admin Data Service', () => {
     ],
     skill_list: [],
     story_list: [],
+    classroom_list: [
+      {
+        classroom_id: 'classroomId1',
+        name: 'math',
+      },
+    ],
   };
   let adminDataResponse: AdminPageData;
 
@@ -128,6 +135,10 @@ describe('Admin Data Service', () => {
       storyList: sampleAdminData.story_list.map(dict =>
         Story.createFromBackendDict(dict)
       ),
+      classroomList: sampleAdminData.classroom_list.map(dict => ({
+        classroomId: dict.classroom_id,
+        name: dict.name,
+      })),
     };
   });
 

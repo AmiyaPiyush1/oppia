@@ -39,6 +39,7 @@ interface DestValidation {
 @Component({
   selector: 'oppia-outcome-destination-editor',
   templateUrl: './outcome-destination-editor.component.html',
+  styleUrls: ['./outcome-destination-editor.component.css'],
 })
 export class OutcomeDestinationEditorComponent implements OnInit {
   @Output() addState: EventEmitter<string> = new EventEmitter<string>();
@@ -223,7 +224,7 @@ export class OutcomeDestinationEditorComponent implements OnInit {
     });
 
     this.explorationAndSkillIdPattern = this.EXPLORATION_AND_SKILL_ID_PATTERN;
-    this.newStateNamePattern = /^[a-zA-Z0-9.\s-]+$/;
+    this.newStateNamePattern = /^[a-zA-Z0-9.\s\-]+$/;
     this.destinationChoices = [];
   }
 

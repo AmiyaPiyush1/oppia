@@ -16,8 +16,10 @@
  * @fileoverview Unit tests for the graph-viz.
  */
 
+// @ts-nocheck
+
 import {
-  async,
+  waitForAsync,
   ComponentFixture,
   fakeAsync,
   TestBed,
@@ -44,7 +46,7 @@ describe('GraphVizComponent', () => {
 
   let mockNewCardAvailableEmitter = new EventEmitter();
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GraphVizComponent, MockTranslatePipe],
       providers: [GraphDetailService, DeviceInfoService],

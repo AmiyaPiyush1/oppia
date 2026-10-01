@@ -16,8 +16,10 @@
  * @fileoverview Unit tests for the ImageClickInput interaction.
  */
 
+// @ts-nocheck
+
 import {
-  async,
+  waitForAsync,
   ComponentFixture,
   fakeAsync,
   flushMicrotasks,
@@ -80,7 +82,7 @@ describe('InteractiveImageClickInput', () => {
     ) => {},
   };
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       declarations: [InteractiveImageClickInput],

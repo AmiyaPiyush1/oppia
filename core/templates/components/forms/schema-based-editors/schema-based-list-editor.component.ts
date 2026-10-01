@@ -39,6 +39,7 @@ import {FocusManagerService} from 'services/stateful/focus-manager.service';
 @Component({
   selector: 'schema-based-list-editor',
   templateUrl: './schema-based-list-editor.component.html',
+  styleUrls: ['./schema-based-list-editor.component.css'],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -141,6 +142,17 @@ export class SchemaBasedListEditorComponent
         i--;
       }
     }
+  }
+
+  hasLastElementNonZeroLength(): boolean {
+    if (!this.localValue || this.localValue.length === 0) {
+      return false;
+    }
+    const lastElement = this.localValue[this.localValue.length - 1];
+    if (typeof lastElement === 'string' || Array.isArray(lastElement)) {
+      return lastElement.length > 0;
+    }
+    return false;
   }
 
   hasDuplicates(): boolean {

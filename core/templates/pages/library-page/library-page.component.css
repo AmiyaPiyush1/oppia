@@ -1,8 +1,3 @@
-/*
-  NOTE to developers: We generate RTL CSS from this file in the webpack
-  compilation, here are sme additional rules that can be added to the CSS files:
-  https://rtlcss.com/learn/usage-guide/control-directives .
-*/
 oppia-library-page .oppia-classroom-text {
   float: left;
   width: 62%;
@@ -260,6 +255,9 @@ oppia-library-page .oppia-search-bar-container {
   justify-content: center;
   margin: 0 auto 0 auto;
   width: 100%;
+}
+oppia-library-page .oppia-search-results-bar-container {
+  margin-bottom: 20px;
 }
 
 oppia-library-page .classroom-cards-wrapper {
@@ -630,6 +628,9 @@ oppia-library-page .community-library-breadcrumbs-container {
   oppia-library-page .oppia-search-bar-container {
     margin-bottom: 90px;
   }
+  oppia-library-page .oppia-search-results-bar-container {
+    margin-bottom: 100px;
+  }
   .oppia-library-group {
     border-top: 3px solid white;
     height: auto;
@@ -735,4 +736,14 @@ oppia-library-page .oppia-exp-summary-tiles-container {
     margin-right: 2vw;
     max-width: 96vw;
   }
+}
+
+.oppia-library-container .title-section-mask {
+  pointer-events: none;
+}
+
+.oppia-exploration-dashboard-card .layout-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }

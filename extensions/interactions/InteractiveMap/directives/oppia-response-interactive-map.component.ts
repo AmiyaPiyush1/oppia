@@ -20,10 +20,7 @@
  * followed by the name of the arg.
  */
 
-// Relative path used as an work around to get the angular compiler and webpack
-// build to not complain.
-// TODO(#16309): Fix relative imports.
-import '../../../../core/templates/third-party-imports/leaflet.import';
+import 'third-party-imports/leaflet.import';
 
 import {Component, Input, OnInit} from '@angular/core';
 import {UrlInterpolationService} from 'domain/utilities/url-interpolation.service';
@@ -33,6 +30,7 @@ import {icon, latLng, MapOptions, Marker, marker, tileLayer} from 'leaflet';
 @Component({
   selector: 'oppia-response-interactive-map',
   templateUrl: './interactive-map-response.component.html',
+  styleUrls: ['./interactive-map-response.component.css'],
 })
 export class ResponseInteractiveMapComponent implements OnInit {
   // These properties are initialized using Angular lifecycle hooks

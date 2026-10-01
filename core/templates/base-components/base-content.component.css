@@ -1,9 +1,4 @@
 /*
-  NOTE to developers: We generate RTL CSS from this file in the webpack
-  compilation, here are sme additional rules that can be added to the CSS files:
-  https://rtlcss.com/learn/usage-guide/control-directives .
-*/
-/*
   Note that adding "overflow-y: scroll;" will break infinite scrolling in the
   search results page.
 */
@@ -20,7 +15,6 @@
   float: left;
   height: 56px;
   transform: translateX(50%);
-  width: 20px;
 }
 .navbar-mobile-container {
   bottom: 0;
@@ -51,6 +45,7 @@
   font-size: 25px;
   padding: 10px;
 }
+
 .oppia-cookie-banner-container {
   background: rgb(0, 0, 0, 0.9);
   bottom: 0;

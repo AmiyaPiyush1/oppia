@@ -360,6 +360,29 @@ class LearnerDashboardTopicsAndStoriesProgressHandlerTests(
         self.assertEqual(len(response['untracked_topics']), 1)
         self.logout()
 
+    def test_duplicate_exploration_ids_are_handled_correctly(self) -> None:
+        """Test that duplicate exploration ids across categories are skipped
+        to avoid redundant progress tracking.
+        """
+        self.login(self.VIEWER_EMAIL)
+        self.save_new_default_exploration(
+            self.EXP_ID_1, self.owner_id, title=self.EXP_TITLE_1
+        )
+        self.publish_exploration(self.owner_id, self.EXP_ID_1)
+        learner_progress_services.mark_exploration_as_completed(
+            self.viewer_id, self.EXP_ID_1
+        )
+
+        response = self.get_json(feconf.LEARNER_DASHBOARD_EXPLORATION_DATA_URL)
+
+        self.assertEqual(len(response['completed_explorations_list']), 1)
+
+        self.assertEqual(
+            response['completed_explorations_list'][0]['id'], self.EXP_ID_1
+        )
+
+        self.logout()
+
     def test_get_learner_dashboard_ids(self) -> None:
         self.login(self.VIEWER_EMAIL)
 
@@ -464,20 +487,12 @@ class LearnerDashboardTopicsAndStoriesProgressHandlerTests(
         learner_progress_services.mark_exploration_as_incomplete(
             self.viewer_id, self.EXP_ID_2, state_name, version
         )
-        learner_progress_services.add_exp_to_learner_playlist(
-            self.viewer_id, self.EXP_ID_3
-        )
-
         learner_progress_services.mark_collection_as_completed(
             self.viewer_id, self.COL_ID_1
         )
         learner_progress_services.mark_collection_as_incomplete(
             self.viewer_id, self.COL_ID_2
         )
-        learner_progress_services.add_collection_to_learner_playlist(
-            self.viewer_id, self.COL_ID_3
-        )
-
         learner_progress_services.mark_story_as_completed(
             self.viewer_id, self.STORY_ID_1
         )
@@ -506,11 +521,6 @@ class LearnerDashboardTopicsAndStoriesProgressHandlerTests(
             [self.EXP_ID_2],
         )
         self.assertEqual(
-            learner_dashboard_activity_ids['exploration_playlist_ids'],
-            [self.EXP_ID_3],
-        )
-
-        self.assertEqual(
             learner_dashboard_activity_ids['completed_collection_ids'],
             [self.COL_ID_1],
         )
@@ -518,11 +528,6 @@ class LearnerDashboardTopicsAndStoriesProgressHandlerTests(
             learner_dashboard_activity_ids['incomplete_collection_ids'],
             [self.COL_ID_2],
         )
-        self.assertEqual(
-            learner_dashboard_activity_ids['collection_playlist_ids'],
-            [self.COL_ID_3],
-        )
-
         self.assertEqual(
             learner_dashboard_activity_ids['completed_story_ids'],
             [self.STORY_ID_1],
@@ -785,27 +790,6 @@ class LearnerDashboardCollectionsProgressHandlerTests(
         )
         self.logout()
 
-    def test_can_see_collection_playlist(self) -> None:
-        self.login(self.VIEWER_EMAIL)
-
-        response = self.get_json(feconf.LEARNER_DASHBOARD_COLLECTION_DATA_URL)
-        self.assertEqual(len(response['collection_playlist']), 0)
-
-        self.save_new_default_collection(
-            self.COL_ID_1, self.owner_id, title=self.COL_TITLE_1
-        )
-        self.publish_collection(self.owner_id, self.COL_ID_1)
-
-        learner_progress_services.add_collection_to_learner_playlist(
-            self.viewer_id, self.COL_ID_1
-        )
-        response = self.get_json(feconf.LEARNER_DASHBOARD_COLLECTION_DATA_URL)
-        self.assertEqual(len(response['collection_playlist']), 1)
-        self.assertEqual(
-            response['collection_playlist'][0]['id'], self.COL_ID_1
-        )
-        self.logout()
-
 
 class LearnerDashboardExplorationsProgressHandlerTests(
     test_utils.GenericTestBase
@@ -912,27 +896,6 @@ class LearnerDashboardExplorationsProgressHandlerTests(
         self.assertEqual(len(response['incomplete_explorations_list']), 1)
         self.assertEqual(
             response['incomplete_explorations_list'][0]['id'], self.EXP_ID_1
-        )
-        self.logout()
-
-    def test_can_see_exploration_playlist(self) -> None:
-        self.login(self.VIEWER_EMAIL)
-
-        response = self.get_json(feconf.LEARNER_DASHBOARD_EXPLORATION_DATA_URL)
-        self.assertEqual(len(response['exploration_playlist']), 0)
-
-        self.save_new_default_exploration(
-            self.EXP_ID_1, self.owner_id, title=self.EXP_TITLE_1
-        )
-        self.publish_exploration(self.owner_id, self.EXP_ID_1)
-
-        learner_progress_services.add_exp_to_learner_playlist(
-            self.viewer_id, self.EXP_ID_1
-        )
-        response = self.get_json(feconf.LEARNER_DASHBOARD_EXPLORATION_DATA_URL)
-        self.assertEqual(len(response['exploration_playlist']), 1)
-        self.assertEqual(
-            response['exploration_playlist'][0]['id'], self.EXP_ID_1
         )
         self.logout()
 
@@ -1086,48 +1049,6 @@ class LearnerDashboardExplorationsProgressHandlerTests(
 
         self.logout()
 
-    def test_exploration_playlist_has_progress_field(self) -> None:
-        """Test that exploration playlist items include progress field."""
-        self.login(self.VIEWER_EMAIL)
-
-        # Create and publish an exploration.
-        exploration = self.save_new_valid_exploration(
-            self.EXP_ID_1,
-            self.owner_id,
-            title=self.EXP_TITLE_1,
-            category='Test',
-        )
-        exp_services.update_exploration(
-            self.owner_id,
-            self.EXP_ID_1,
-            [
-                exp_domain.ExplorationChange(
-                    {
-                        'cmd': exp_domain.CMD_EDIT_STATE_PROPERTY,
-                        'state_name': exploration.init_state_name,
-                        'property_name': exp_domain.STATE_PROPERTY_CARD_IS_CHECKPOINT,
-                        'new_value': True,
-                    }
-                ),
-            ],
-            'Mark initial state as checkpoint',
-        )
-        self.publish_exploration(self.owner_id, self.EXP_ID_1)
-
-        # Add to playlist.
-        learner_progress_services.add_exp_to_learner_playlist(
-            self.viewer_id, self.EXP_ID_1
-        )
-
-        response = self.get_json(feconf.LEARNER_DASHBOARD_EXPLORATION_DATA_URL)
-        playlist = response['exploration_playlist']
-        self.assertEqual(len(playlist), 1)
-        self.assertEqual(playlist[0]['id'], self.EXP_ID_1)
-        self.assertEqual(playlist[0]['visited_checkpoints_count'], 0)
-        self.assertEqual(playlist[0]['total_checkpoints_count'], 1)
-
-        self.logout()
-
     def test_multiple_explorations_have_individual_progress(self) -> None:
         """Test that multiple explorations each have their own progress."""
         self.login(self.VIEWER_EMAIL)
@@ -1139,7 +1060,7 @@ class LearnerDashboardExplorationsProgressHandlerTests(
             exploration = self.save_new_valid_exploration(
                 exp_id,
                 self.owner_id,
-                title=f'Test Exploration {i+1}',
+                title=f'Test Exploration {i + 1}',
                 category='Test',
             )
             exp_services.update_exploration(
@@ -1287,54 +1208,5 @@ class LearnerDashboardExplorationsProgressHandlerTests(
         self.assertEqual(len(completed_exps), 1)
         self.assertEqual(completed_exps[0]['visited_checkpoints_count'], 0)
         self.assertEqual(completed_exps[0]['total_checkpoints_count'], 0)
-
-        self.logout()
-
-    def test_exploration_playlist_without_progress_data(self) -> None:
-        """Test exploration playlist when no progress data is available."""
-        self.login(self.VIEWER_EMAIL)
-
-        # Create and publish an exploration.
-        exploration = self.save_new_valid_exploration(
-            self.EXP_ID_1,
-            self.owner_id,
-            title=self.EXP_TITLE_1,
-            category='Test',
-        )
-        exp_services.update_exploration(
-            self.owner_id,
-            self.EXP_ID_1,
-            [
-                exp_domain.ExplorationChange(
-                    {
-                        'cmd': exp_domain.CMD_EDIT_STATE_PROPERTY,
-                        'state_name': exploration.init_state_name,
-                        'property_name': exp_domain.STATE_PROPERTY_CARD_IS_CHECKPOINT,
-                        'new_value': True,
-                    }
-                ),
-            ],
-            'Mark initial state as checkpoint',
-        )
-        self.publish_exploration(self.owner_id, self.EXP_ID_1)
-
-        # Add to playlist.
-        learner_progress_services.add_exp_to_learner_playlist(
-            self.viewer_id, self.EXP_ID_1
-        )
-
-        with self.swap_to_always_return(
-            learner_progress_services,
-            'get_checkpoint_progress_for_explorations',
-            {},
-        ):
-            response = self.get_json(
-                feconf.LEARNER_DASHBOARD_EXPLORATION_DATA_URL
-            )
-
-        playlist = response['exploration_playlist']
-        self.assertEqual(len(playlist), 1)
-        self.assertEqual(playlist[0]['visited_checkpoints_count'], 0)
-        self.assertEqual(playlist[0]['total_checkpoints_count'], 0)
 
         self.logout()

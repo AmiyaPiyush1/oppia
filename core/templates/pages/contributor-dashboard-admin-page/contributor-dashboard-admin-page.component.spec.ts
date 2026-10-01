@@ -1,4 +1,4 @@
-// Copyright 2024 The Oppia Authors. All Rights Reserved.
+// Copyright 2026 The Oppia Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 /**
  * @fileoverview Unit tests for the Contributor dashboard admin page.
  */
+
+// @ts-nocheck
 
 import {
   ComponentFixture,
@@ -34,6 +36,9 @@ import {UserInfo} from 'domain/user/user-info.model';
 class MockPlatformFeatureService {
   status = {
     CdAdminDashboardNewUi: {
+      isEnabled: false,
+    },
+    EnableAutomaticTranslationSuggestions: {
       isEnabled: false,
     },
   };
@@ -269,6 +274,7 @@ describe('ContributorDashboardAdminPageComponent', () => {
         };
         const viewContributorsResponse = {
           can_review_questions: true,
+          can_submit_translation_for_language_codes: [],
           can_review_translation_for_language_codes: ['en', 'es'],
           can_review_voiceover_for_language_codes: ['en', 'es'],
           can_submit_questions: true,

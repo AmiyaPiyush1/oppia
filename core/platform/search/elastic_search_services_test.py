@@ -215,7 +215,22 @@ class ElasticSearchUnitTests(test_utils.GenericTestBase):
                 {
                     'query': {
                         'bool': {
-                            'must': [{'multi_match': {'query': 'query'}}],
+                            'must': [
+                                {
+                                    'multi_match': {
+                                        'query': 'query',
+                                        'type': 'bool_prefix',
+                                        'fields': [
+                                            'title^3',
+                                            'objective^2',
+                                            'tags',
+                                            'translated_titles^3',
+                                            'translated_objectives^2',
+                                            'translated_tags',
+                                        ],
+                                    }
+                                }
+                            ],
                             'filter': [
                                 {
                                     'match': {
@@ -390,6 +405,8 @@ class ElasticSearchUnitTests(test_utils.GenericTestBase):
                                     'multi_match': {
                                         'query': 'query',
                                         'fields': ['title', 'summary'],
+                                        'type': 'bool_prefix',
+                                        'operator': 'and',
                                     }
                                 }
                             ],

@@ -34,6 +34,7 @@ import {InteractionSpecsKey} from 'pages/interaction-specs.constants';
 @Component({
   selector: 'oppia-unresolved-answers-overview',
   templateUrl: './unresolved-answers-overview.component.html',
+  styleUrls: ['./unresolved-answers-overview.component.css'],
 })
 export class UnresolvedAnswersOverviewComponent implements OnInit {
   // These properties below are initialized using Angular lifecycle hooks
@@ -70,23 +71,23 @@ export class UnresolvedAnswersOverviewComponent implements OnInit {
     );
   }
 
-  getCurrentInteractionId(): string {
-    return this.stateInteractionIdService.savedMemento;
+  getCurrentInteractionId(): InteractionSpecsKey {
+    let stateInteractionId = this.stateInteractionIdService.savedMemento;
+    if (stateInteractionId === null) {
+      throw new Error('Expected stateInteraction ID to be non-null.');
+    }
+    return stateInteractionId;
   }
 
   isCurrentInteractionLinear(): boolean {
     let interactionId = this.getCurrentInteractionId();
-    return (
-      Boolean(interactionId) &&
-      INTERACTION_SPECS[interactionId as InteractionSpecsKey].is_linear
-    );
+    return Boolean(interactionId) && INTERACTION_SPECS[interactionId].is_linear;
   }
 
   isCurrentInteractionTrainable(): boolean {
     let interactionId = this.getCurrentInteractionId();
     return (
-      Boolean(interactionId) &&
-      INTERACTION_SPECS[interactionId as InteractionSpecsKey].is_trainable
+      Boolean(interactionId) && INTERACTION_SPECS[interactionId].is_trainable
     );
   }
 

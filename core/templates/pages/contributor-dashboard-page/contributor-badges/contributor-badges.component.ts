@@ -29,9 +29,11 @@ interface ContributionCounts {
   corrections: number;
 }
 
+type ContributionSubType = 'submission' | 'review' | 'correction';
+
 interface Badge {
   contributionCount: number;
-  text: string;
+  text: ContributionSubType;
   language: string | null;
   isUnlocked: boolean;
 }
@@ -44,7 +46,7 @@ export enum MobileBadgeType {
 @Component({
   selector: 'contributor-badges',
   templateUrl: './contributor-badges.component.html',
-  styleUrls: [],
+  styleUrls: ['./contributor-badges.component.css'],
 })
 export class ContributorBadgesComponent {
   @ViewChild('dropdown', {static: false}) dropdownRef!: ElementRef;
@@ -68,6 +70,7 @@ export class ContributorBadgesComponent {
     corrections: 0,
   };
 
+  MobileBadgeType = MobileBadgeType;
   dropdownShown = false;
   mobileDropdownShown = false;
   mobileBadgeTypeDropdownShown = false;
@@ -153,12 +156,14 @@ export class ContributorBadgesComponent {
             reviews: stat.reviewed_translations_count,
             corrections: stat.accepted_translations_with_reviewer_edits_count,
           };
-          this.reviewableLanguages.push(languageDescription);
         } else {
           this.totalTranslationStats[languageDescription].reviews +=
             stat.reviewed_translations_count;
           this.totalTranslationStats[languageDescription].corrections +=
             stat.accepted_translations_with_reviewer_edits_count;
+        }
+        if (!this.reviewableLanguages.includes(languageDescription)) {
+          this.reviewableLanguages.push(languageDescription);
         }
       });
     }
@@ -233,7 +238,7 @@ export class ContributorBadgesComponent {
 
   getObtainedBadges(
     contributionCount: number,
-    contributionSubType: string,
+    contributionSubType: ContributionSubType,
     language: string | null
   ): Badge[] {
     const badges: Badge[] = [];

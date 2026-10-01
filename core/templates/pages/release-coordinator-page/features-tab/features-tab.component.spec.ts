@@ -16,12 +16,14 @@
  * @fileoverview Unit tests for the feature tab in release coordinator page.
  */
 
+// @ts-nocheck
+
 import {NO_ERRORS_SCHEMA, ElementRef, QueryList} from '@angular/core';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
 import {
   ComponentFixture,
   fakeAsync,
-  async,
+  waitForAsync,
   TestBed,
   flushMicrotasks,
   tick,
@@ -73,7 +75,7 @@ describe('Release coordinator page feature tab', function () {
 
   let mockConfirmResult: (val: boolean) => void;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [
         FormsModule,

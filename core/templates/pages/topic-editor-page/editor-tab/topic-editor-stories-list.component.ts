@@ -34,13 +34,14 @@ import {PlatformFeatureService} from 'services/platform-feature.service';
 @Component({
   selector: 'oppia-topic-editor-stories-list',
   templateUrl: './topic-editor-stories-list.component.html',
+  styleUrls: ['./topic-editor-stories-list.component.css'],
 })
 export class TopicEditorStoriesListComponent implements OnInit {
-  @Input() storySummaries: StorySummary[];
-  @Input() topic: Topic;
-  topicRights: TopicRights;
+  @Input() storySummaries!: StorySummary[];
+  @Input() topic!: Topic;
+  topicRights!: TopicRights;
 
-  STORY_TABLE_COLUMN_HEADINGS: string[];
+  STORY_TABLE_COLUMN_HEADINGS!: string[];
 
   constructor(
     private ngbModal: NgbModal,

@@ -22,7 +22,7 @@ import inspect
 import json
 import re
 
-from core import schema_utils_test
+from core import schema_utils_test, utils
 from core.tests import test_utils
 from extensions.objects.models import objects
 
@@ -1105,7 +1105,14 @@ class ObjectDefinitionTests(test_utils.GenericTestBase):
 
     def test_default_values_for_objects_are_valid(self) -> None:
         for _, member in inspect.getmembers(objects):
-            if inspect.isclass(member) and member.default_value is not None:
+            if not inspect.isclass(member):
+                continue
+            ancestor_names = [
+                base_class.__name__ for base_class in inspect.getmro(member)
+            ]
+            if 'BaseObject' not in ancestor_names:
+                continue
+            if member.default_value is not None:
                 if member.__name__ == 'BaseTranslatableObject':
                     continue
 
@@ -1203,6 +1210,11 @@ class BaseTranslatableObjectTests(test_utils.GenericTestBase):
     def test_translatable_objects_naming(self) -> None:
         for name, member in inspect.getmembers(objects):
             if not inspect.isclass(member):
+                continue
+            ancestor_names = [
+                base_class.__name__ for base_class in inspect.getmro(member)
+            ]
+            if 'BaseObject' not in ancestor_names:
                 continue
 
             # Assert that BaseTranslatableObject subclasses start with
@@ -1388,7 +1400,8 @@ class TranslatableSetOfNormalizedStringTests(test_utils.GenericTestBase):
             )
 
         with self.assertRaisesRegex(
-            AssertionError, 'Validation failed: is_uniquified'
+            (AssertionError, utils.InvalidInputException),
+            'Validation failed: is_uniquified',
         ):
             objects.TranslatableSetOfNormalizedString.normalize(
                 {'contentId': 'rule_input', 'normalizedStrSet': ['1', '1']}
@@ -1421,7 +1434,8 @@ class TranslatableSetOfNormalizedStringTests(test_utils.GenericTestBase):
             )
 
         with self.assertRaisesRegex(
-            AssertionError, 'Validation failed: is_uniquified'
+            (AssertionError, utils.InvalidInputException),
+            'Validation failed: is_uniquified',
         ):
             objects.TranslatableSetOfNormalizedString.normalize_value(
                 ['1', '1']
@@ -1453,7 +1467,8 @@ class TranslatableSetOfUnicodeStringTests(test_utils.GenericTestBase):
             )
 
         with self.assertRaisesRegex(
-            AssertionError, 'Validation failed: is_uniquified'
+            (AssertionError, utils.InvalidInputException),
+            'Validation failed: is_uniquified',
         ):
             objects.TranslatableSetOfUnicodeString.normalize(
                 {'contentId': 'rule_input', 'unicodeStrSet': ['1', '1']}
@@ -1486,7 +1501,8 @@ class TranslatableSetOfUnicodeStringTests(test_utils.GenericTestBase):
             )
 
         with self.assertRaisesRegex(
-            AssertionError, 'Validation failed: is_uniquified'
+            (AssertionError, utils.InvalidInputException),
+            'Validation failed: is_uniquified',
         ):
             objects.TranslatableSetOfUnicodeString.normalize_value(['1', '1'])
 

@@ -636,6 +636,7 @@ describe('Contributor dashboard Admin page', () => {
           Promise.resolve({
             can_submit_questions: true,
             can_review_questions: true,
+            can_submit_translation_for_language_codes: [],
             can_review_translation_for_language_codes: [],
             can_review_voiceover_for_language_codes: [],
           })
@@ -675,6 +676,7 @@ describe('Contributor dashboard Admin page', () => {
           Promise.resolve({
             can_submit_questions: false,
             can_review_questions: true,
+            can_submit_translation_for_language_codes: [],
             can_review_translation_for_language_codes: ['en'],
             can_review_voiceover_for_language_codes: [],
           })
@@ -714,6 +716,7 @@ describe('Contributor dashboard Admin page', () => {
           Promise.resolve({
             can_submit_questions: true,
             can_review_questions: true,
+            can_submit_translation_for_language_codes: [],
             can_review_translation_for_language_codes: [],
             can_review_voiceover_for_language_codes: [],
           })
@@ -753,6 +756,7 @@ describe('Contributor dashboard Admin page', () => {
           Promise.resolve({
             can_submit_questions: true,
             can_review_questions: false,
+            can_submit_translation_for_language_codes: [],
             can_review_translation_for_language_codes: [],
             can_review_voiceover_for_language_codes: [],
           })
@@ -792,6 +796,7 @@ describe('Contributor dashboard Admin page', () => {
           Promise.resolve({
             can_submit_questions: false,
             can_review_questions: true,
+            can_submit_translation_for_language_codes: [],
             can_review_translation_for_language_codes: [],
             can_review_voiceover_for_language_codes: [],
           })
@@ -824,6 +829,7 @@ describe('Contributor dashboard Admin page', () => {
         Promise.resolve({
           can_submit_questions: false,
           can_review_questions: true,
+          can_submit_translation_for_language_codes: [],
           can_review_translation_for_language_codes: ['en'],
           can_review_voiceover_for_language_codes: [],
         })
@@ -857,6 +863,26 @@ describe('Contributor dashboard Admin page', () => {
       expect(modalSpy).toHaveBeenCalledWith(UsernameInputModal);
       expect(openRoleEditorSpy).toHaveBeenCalledWith('user1');
     }));
+
+    it('should add coordinator tabs to the contribution types', fakeAsync(() => {
+      component.ngOnInit();
+      tick();
+      fixture.detectChanges();
+
+      expect(component.CONTRIBUTION_TYPES).toContain(
+        component.TAB_NAME_TRANSLATION_COORDINATOR
+      );
+      expect(component.CONTRIBUTION_TYPES).toContain(
+        component.TAB_NAME_QUESTION_COORDINATOR
+      );
+    }));
+
+    it('should identify coordinator tabs', () => {
+      component.setActiveTab(component.TAB_NAME_TRANSLATION_COORDINATOR);
+      expect(component.isCoordinatorTab()).toBeTrue();
+      component.setActiveTab(component.TAB_NAME_QUESTION_SUBMITTER);
+      expect(component.isCoordinatorTab()).toBeFalse();
+    });
 
     it('should start any language with its English name', fakeAsync(() => {
       component.ngOnInit();

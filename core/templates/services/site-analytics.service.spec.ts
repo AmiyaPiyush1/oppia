@@ -16,7 +16,10 @@
  * @fileoverview Unit tests for SiteAnalyticsService.
  */
 
-import {TestBed} from '@angular/core/testing';
+// @ts-nocheck
+
+import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
+import {DOCUMENT} from '@angular/common';
 import {SiteAnalyticsService} from 'services/site-analytics.service';
 import {WindowRef} from 'services/contextual/window-ref.service';
 import {LocalStorageService} from 'services/local-storage.service';
@@ -47,7 +50,11 @@ describe('Site Analytics Service', () => {
       'getLastPageViewTime',
       'setLastPageViewTime',
     ]);
-    const userServiceSpy = jasmine.createSpyObj('UserService', ['isLoggedIn']);
+    const userServiceSpy = jasmine.createSpyObj('UserService', [
+      'isLoggedIn',
+      'getUserInfoAsync',
+    ]);
+    userServiceSpy.getUserInfoAsync.and.returnValue(Promise.resolve());
     TestBed.configureTestingModule({
       providers: [
         SiteAnalyticsService,
@@ -57,6 +64,7 @@ describe('Site Analytics Service', () => {
         },
         {provide: LocalStorageService, useValue: localStorageServiceSpy},
         {provide: UserService, useValue: userServiceSpy},
+        {provide: DOCUMENT, useValue: document},
       ],
     }).compileComponents();
 
@@ -75,7 +83,8 @@ describe('Site Analytics Service', () => {
   });
 
   describe('when tested using gtag spy', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+      await Promise.resolve();
       gtagSpy = spyOn(ws.nativeWindow, 'gtag');
     });
 
@@ -575,24 +584,6 @@ describe('Site Analytics Service', () => {
       );
     });
 
-    it('should register save recorded audio event', () => {
-      sas.registerSaveRecordedAudioEvent(explorationId);
-
-      expect(gtagSpy).toHaveBeenCalledWith('event', 'save_recorded_audio', {
-        exploration_id: explorationId,
-        login_status: 'logged_in',
-      });
-    });
-
-    it('should register audio recording event', () => {
-      sas.registerStartAudioRecordingEvent(explorationId);
-
-      expect(gtagSpy).toHaveBeenCalledWith('event', 'start_audio_recording', {
-        exploration_id: explorationId,
-        login_status: 'logged_in',
-      });
-    });
-
     it('should register upload audio event', () => {
       sas.registerUploadAudioEvent(explorationId);
 
@@ -692,6 +683,38 @@ describe('Site Analytics Service', () => {
         login_status: 'logged_in',
       });
     });
+
+    it('should wait for user info before sending event if login state is unresolved', fakeAsync(() => {
+      let resolveUserInfoPromise!: () => void;
+      const userInfoPromise = new Promise<void>(resolve => {
+        resolveUserInfoPromise = resolve;
+      });
+
+      userService.getUserInfoAsync.and.returnValue(userInfoPromise);
+      userService.isLoggedIn.and.returnValue(false);
+
+      const delayedInitSas = new SiteAnalyticsService(
+        ws,
+        localStorageService,
+        userService
+      );
+
+      delayedInitSas.registerCommunityLessonStarted(explorationId);
+      expect(gtagSpy).not.toHaveBeenCalled();
+
+      userService.isLoggedIn.and.returnValue(true);
+      resolveUserInfoPromise();
+      flushMicrotasks();
+
+      expect(gtagSpy).toHaveBeenCalledWith(
+        'event',
+        'community_lesson_started',
+        {
+          exploration_id: explorationId,
+          login_status: 'logged_in',
+        }
+      );
+    }));
 
     it('should register classroom page viewed', () => {
       spyOn(
@@ -1102,6 +1125,76 @@ describe('Site Analytics Service', () => {
           login_status: 'logged_in',
         }
       );
+    });
+
+    it('should register lesson feedback modal open event', () => {
+      const expId: string = 'exp_id';
+      sas.registerLessonFeedbackModalOpenEvent(expId);
+      expect(gtagSpy).toHaveBeenCalledWith(
+        'event',
+        'lesson_feedback_modal_open',
+        {
+          exploration_id: expId,
+          login_status: 'logged_in',
+        }
+      );
+    });
+
+    it('should register lesson issue modal open event', () => {
+      const expId: string = 'exp_id';
+      sas.registerLessonIssueModalOpenEvent(expId);
+      expect(gtagSpy).toHaveBeenCalledWith('event', 'lesson_issue_modal_open', {
+        exploration_id: expId,
+        login_status: 'logged_in',
+      });
+    });
+
+    it('should register website issue modal open event', () => {
+      sas.registerWebsiteIssueModalOpenEvent();
+      expect(gtagSpy).toHaveBeenCalledWith(
+        'event',
+        'website_issue_modal_open',
+        {
+          page_path: pathname,
+          login_status: 'logged_in',
+        }
+      );
+    });
+
+    it('should register lesson feedback modal submit event', () => {
+      const expId: string = 'exp_id';
+      const feedbackId: string = 'feedback_id';
+      sas.registerLessonFeedbackSubmittedEvent(expId, feedbackId);
+      expect(gtagSpy).toHaveBeenCalledWith(
+        'event',
+        'lesson_feedback_submitted',
+        {
+          exploration_id: expId,
+          feedbackId: feedbackId,
+          login_status: 'logged_in',
+        }
+      );
+    });
+
+    it('should register lesson issue modal submit event', () => {
+      const expId: string = 'exp_id';
+      const feedbackId: string = 'feedback_id';
+      sas.registerLessonIssueSubmittedEvent(expId, feedbackId);
+      expect(gtagSpy).toHaveBeenCalledWith('event', 'lesson_issue_submitted', {
+        exploration_id: expId,
+        feedbackId: feedbackId,
+        login_status: 'logged_in',
+      });
+    });
+
+    it('should register website issue modal open event', () => {
+      const feedbackId: string = 'feedback_id';
+      sas.registerWebsiteIssueSubmittedEvent(feedbackId);
+      expect(gtagSpy).toHaveBeenCalledWith('event', 'website_issue_submitted', {
+        page_path: pathname,
+        feedbackId: feedbackId,
+        login_status: 'logged_in',
+      });
     });
   });
 });

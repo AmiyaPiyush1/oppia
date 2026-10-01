@@ -30,12 +30,14 @@ import {UrlService} from 'services/contextual/url.service';
 import {LoaderService} from 'services/loader.service';
 import {PageTitleService} from 'services/page-title.service';
 import {PreventPageUnloadEventService} from 'services/prevent-page-unload-event.service';
+import {PlatformFeatureService} from 'services/platform-feature.service';
 import {TopicEditorRoutingService} from './services/topic-editor-routing.service';
 import {TopicEditorStateService} from './services/topic-editor-state.service';
 
 @Component({
   selector: 'oppia-topic-editor-page',
   templateUrl: './topic-editor-page.component.html',
+  styleUrls: ['./topic-editor-page.component.css'],
 })
 export class TopicEditorPageComponent implements OnInit, OnDestroy {
   topic: Topic | null = null;
@@ -50,6 +52,7 @@ export class TopicEditorPageComponent implements OnInit, OnDestroy {
     private pageContextService: PageContextService,
     private loaderService: LoaderService,
     private pageTitleService: PageTitleService,
+    private platformFeatureService: PlatformFeatureService,
     private preventPageUnloadEventService: PreventPageUnloadEventService,
     private ngbModal: NgbModal,
     private questionUndoRedoService: QuestionUndoRedoService,
@@ -129,12 +132,13 @@ export class TopicEditorPageComponent implements OnInit, OnDestroy {
       } else {
         const subtopicIdFromUrl =
           this.topicEditorRoutingService.getSubtopicIdFromUrl();
-        const subtopicId =
-          subtopicIdFromUrl !== null &&
-          subtopicIdFromUrl !== undefined &&
-          !Number.isNaN(subtopicIdFromUrl)
+        const subtopicId = activeTab.startsWith('subtopic')
+          ? subtopicIdFromUrl !== null &&
+            subtopicIdFromUrl !== undefined &&
+            !Number.isNaN(subtopicIdFromUrl)
             ? subtopicIdFromUrl
-            : lastSubtopicIdVisited;
+            : lastSubtopicIdVisited
+          : lastSubtopicIdVisited;
         this.topicEditorRoutingService.navigateToSubtopicPreviewTab(subtopicId);
       }
     });
